@@ -536,3 +536,46 @@ Use this checklist for every schema-changing query.
 - Query 30 is the next schema migration.
 - Inspection queries remain documented even when they do not modify the database.
 - Do not mark planned queries as applied until they have been successfully run in Supabase.
+
+- ---
+
+## Query 30 — Assignment Lifecycle and Payroll Foundation
+
+**Status:** Completed successfully  
+**Completed:** July 18, 2026 at 4:55:09 AM UTC
+
+### Purpose
+
+Created the database foundation for the Car Concierge assignment lifecycle, cancellation compensation, additional-cost review, assignment history, and payroll processing.
+
+### Changes completed
+
+- Added assignment cancellation tracking
+- Confirmed `scheduled_start_at` as the official pickup appointment time
+- Added late-cancellation pay fields
+- Added one-hour cancellation-pay support for cancellations made less than 60 minutes before pickup
+- Added completion-notification tracking
+- Added payroll hold fields
+- Added partial approval support for contractor cost requests
+- Added cost cancellation support
+- Created assignment event history
+- Created internal assignment notes
+- Created permanent assignment-deletion audit storage
+- Created payroll periods
+- Created payroll runs
+- Created contractor payroll summaries
+- Created payroll line items
+- Created payroll event history
+- Added supporting constraints, foreign keys, indexes, and verification checks
+
+### Existing data preserved
+
+The migration preserved the existing assignment, completion, and cost records.
+
+The existing cancelled assignment was backfilled with legacy cancellation details so the new validation rules could be applied safely.
+
+### Execution result
+
+```text
+Query 30 completed successfully
+2026-07-18 04:55:09.935477+00
