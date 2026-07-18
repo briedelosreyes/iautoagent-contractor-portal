@@ -37,7 +37,7 @@ This file tracks every production database change made to the iAutoAgent Contrac
 | 29 | Assignment, Cost, and Completion Schema Inspection | Inspection | Completed | 2026-07-18 | Brie |
 | 30 | Assignment Lifecycle and Payroll Foundation | Schema | Applied | 2026-07-18 | Brie |
 | 31 | Assignment Event and Lifecycle Automation | Applied | Functions and Triggers | 2026-07-18 | Brie |
-| 32 | Payroll Calculation and Approval Functions | Functions | Applied | 2026-07-18 | Brie |
+| 32 | Payroll Calculation and Approval Functions | Functions | Verified | 2026-07-18 | Brie |
 | 33 | Role Model and Access Policies | Security | Planned | — | — |
 | 34 | Cancellation and Late-Pay Engine | Functions | Planned | — | — |
 | 35 | Completion and Cost Notification Automation | Automation | Planned | — | — |
@@ -714,7 +714,7 @@ Query 31 completed successfully
 
 ## Query 32 — Payroll Calculation and Approval Functions
 
-**Status:** Applied  
+**Status:** Verified  
 **Category:** Functions
 
 ### Purpose
@@ -867,3 +867,26 @@ After successful execution:
 3. Add the person who applied it.
 4. Run the verification tests.
 5. Change the status to `Verified` only after testing succeeds.
+
+### Verification completed
+
+**Verified:** 2026-07-18  
+**Verified by:** Brie
+
+Query 32 passed the controlled payroll-engine verification test.
+
+Confirmed behavior:
+
+- Semimonthly period calculation correctly resolved July 1–15 and July 16–31.
+- Completed assignment pay calculated 2.5 hours at $20 per hour for $50.
+- Late-cancellation pay used the immutable Query 31 snapshot of 1 hour at $20 for $20.
+- Partial cost approval used the approved amount of $15 rather than the requested amount of $25.
+- Three payroll line items were generated.
+- Contractor gross pay calculated correctly at $85.
+- Payroll-run gross total calculated correctly at $85.
+- Payroll submission changed the run to `pending_client_services_approval`.
+- Payroll hold changed the run to `on_hold`.
+- Payroll approval changed the run to `approved_for_payout`.
+- Contractor payroll-item status changed to `approved`.
+- Four payroll audit events were created.
+- All temporary assignments, costs, payroll periods, payroll runs, payroll items, line items, completion records, assignment events, and payroll events were rolled back successfully.
