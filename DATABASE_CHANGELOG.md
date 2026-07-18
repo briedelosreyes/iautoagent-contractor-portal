@@ -34,16 +34,15 @@ This file tracks every production database change made to the iAutoAgent Contrac
 | 26 | Verify Jay Profile and Roles | Verification | Applied | 2026-07 | Brie |
 | 27 | Grant Service Role Access to Notification Outbox | Permissions | Applied | 2026-07 | Brie |
 | 28 | Grant Service Role Access to Contractor Portal Tables | Permissions | Applied | 2026-07 | Brie |
-| 29 | Inspect Steve Assignment Calendar Sync | Inspection | Not required | — | — |
-| 30 | Assignment Lifecycle and Payroll Foundation | Schema | Planned | — | — |
-| 31 | Assignment Timeline and Internal Notes | Schema | Planned | — | — |
-| 32 | Payroll Batches and Approval Workflow | Schema | Planned | — | — |
+| 29 | Assignment, Cost, and Completion Schema Inspection | Inspection | Completed | 2026-07-18 | Brie |
+| 30 | Assignment Lifecycle and Payroll Foundation | Schema | Applied | 2026-07-18 | Brie |
+| 31 | Assignment Lifecycle Functions and Triggers | Functions | Planned | — | — |
+| 32 | Payroll Calculation and Approval Functions | Functions | Planned | — | — |
 | 33 | Role Model and Access Policies | Security | Planned | — | — |
 | 34 | Cancellation and Late-Pay Engine | Functions | Planned | — | — |
-| 35 | Completion and Cost Notification Tracking | Schema | Planned | — | — |
-| 36 | Assignment Deletion Audit | Schema | Planned | — | — |
+| 35 | Completion and Cost Notification Automation | Automation | Planned | — | — |
+| 36 | Assignment Deletion Function and Audit Workflow | Functions | Planned | — | — |
 | 37 | Payroll Notification Outbox Events | Automation | Planned | — | — |
-
 ---
 
 # Detailed Change Records
