@@ -36,8 +36,8 @@ This file tracks every production database change made to the iAutoAgent Contrac
 | 28 | Grant Service Role Access to Contractor Portal Tables | Permissions | Applied | 2026-07 | Brie |
 | 29 | Assignment, Cost, and Completion Schema Inspection | Inspection | Completed | 2026-07-18 | Brie |
 | 30 | Assignment Lifecycle and Payroll Foundation | Schema | Applied | 2026-07-18 | Brie |
-| 31 | Assignment Lifecycle Functions and Triggers | Functions | Planned | — | — |
-| 32 | Payroll Calculation and Approval Functions | Functions | Planned | — | — |
+| 31 | Assignment Event and Lifecycle Automation | Applied | Functions and Triggers | 2026-07-18 | Brie |
+| 32 | Payroll Calculation and Approval Functions | Planned | Functions |  |  |
 | 33 | Role Model and Access Policies | Security | Planned | — | — |
 | 34 | Cancellation and Late-Pay Engine | Functions | Planned | — | — |
 | 35 | Completion and Cost Notification Automation | Automation | Planned | — | — |
@@ -575,6 +575,139 @@ The existing cancelled assignment was backfilled with legacy cancellation detail
 
 ### Execution result
 
-```text
 Query 30 completed successfully
 2026-07-18 04:55:09.935477+00
+
+---
+
+## Query 31 — Assignment Event and Lifecycle Automation
+
+**Status:** Applied  
+**Category:** Functions and Triggers  
+**Applied Date:** 2026-07-18  
+**Applied By:** Brie  
+
+### Summary
+
+Implemented the assignment event and lifecycle automation layer that connects the Query 30 foundation tables to the existing Car Concierge assignment workflow.
+
+This migration preserved the existing acceptance, decline, reassignment, start, end, completion, and calendar functions while adding centralized timeline logging and lifecycle processing.
+
+### Schema changes
+
+Added the following immutable cancellation calculation field to `car_concierge_assignments`:
+
+- `cancellation_scheduled_start_at_snapshot`
+
+This field preserves the scheduled pickup timestamp used in the cancellation-pay calculation so the result cannot change if the assignment schedule is edited later.
+
+### Functions created
+
+- `get_portal_actor_role(uuid)`
+- `write_car_concierge_assignment_event(uuid, text, text, text, uuid, text, numeric, text, jsonb)`
+- `prepare_car_concierge_assignment_lifecycle()`
+- `log_car_concierge_assignment_lifecycle()`
+- `log_car_concierge_cost_event()`
+- `log_car_concierge_assignment_note_event()`
+
+### Assignment lifecycle automation
+
+The migration now automatically:
+
+- Records assignment creation
+- Records assignment release for acceptance
+- Records acceptance and decline
+- Records reassignment
+- Records assignment start
+- Records assignment completion
+- Records assignment approval and paid status
+- Records cancellation
+- Records payroll hold placement and removal
+- Records completion-notification outcomes
+- Records calendar synchronization and cancellation outcomes
+
+### Cancellation-pay automation
+
+When an assignment first becomes `cancelled`, the system now:
+
+- Records the authoritative cancellation timestamp
+- Records the canceling profile when available
+- Resolves the cancellation source
+- Captures the scheduled pickup timestamp snapshot
+- Calculates minutes before scheduled pickup
+- Applies the Version 1 late-cancellation policy
+- Awards one hour of pay only when cancellation occurs less than 60 minutes before pickup and no later than pickup
+- Applies no cancellation pay at exactly 60 minutes before pickup, earlier than 60 minutes, or after pickup
+- Stores the hourly-rate snapshot
+- Stores the cancellation-pay amount
+- Records the policy version as `late-cancellation-v1`
+- Creates either a `late_cancellation_pay_applied` or `cancellation_not_payable` timeline event
+
+### Completion notification automation
+
+When an assignment first becomes `completed`, the migration automatically resets and queues completion-notification processing by setting:
+
+- `completion_notification_status = pending`
+- `completion_notification_sent_at = null`
+- `completion_notification_error = null`
+- `completion_notification_attempt_count = 0`
+- `completion_notification_last_attempt_at = null`
+
+### Additional-cost timeline automation
+
+The migration now records:
+
+- Additional cost submitted
+- Additional cost approved
+- Additional cost partially approved
+- Additional cost denied
+- Additional cost cancelled
+- Additional cost returned to pending
+
+Only the approved amount is recorded as payable when a cost is approved.
+
+### Internal-note timeline automation
+
+Adding a record to `car_concierge_assignment_notes` now automatically creates an `internal_note_added` assignment event.
+
+### Triggers created
+
+On `car_concierge_assignments`:
+
+- `car_concierge_assignment_lifecycle_before`
+- `car_concierge_assignment_lifecycle_after`
+
+On `car_concierge_costs`:
+
+- `car_concierge_cost_event_logger`
+
+On `car_concierge_assignment_notes`:
+
+- `car_concierge_assignment_note_event_logger`
+- `car_concierge_assignment_notes_set_updated_at`
+
+On payroll tables:
+
+- `car_concierge_payroll_periods_set_updated_at`
+- `car_concierge_payroll_runs_set_updated_at`
+- `car_concierge_payroll_items_set_updated_at`
+
+### Security
+
+Direct execution of the generic assignment event writer was revoked from ordinary public and authenticated roles. Timeline events are intended to be generated through trusted database functions and triggers.
+
+### Verification
+
+The migration verified:
+
+- The cancellation schedule snapshot column exists
+- Required lifecycle functions exist
+- Assignment lifecycle triggers exist
+- Cost event trigger exists
+- Assignment-note event trigger exists
+
+### Execution result
+
+```text
+Query 31 completed successfully
+2026-07-18 05:24:42.732689+00
