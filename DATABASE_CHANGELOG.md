@@ -37,7 +37,7 @@ This file tracks every production database change made to the iAutoAgent Contrac
 | 29 | Assignment, Cost, and Completion Schema Inspection | Inspection | Completed | 2026-07-18 | Brie |
 | 30 | Assignment Lifecycle and Payroll Foundation | Schema | Applied | 2026-07-18 | Brie |
 | 31 | Assignment Event and Lifecycle Automation | Applied | Functions and Triggers | 2026-07-18 | Brie |
-| 32 | Payroll Calculation and Approval Functions | Planned | Functions |  |  |
+| 32 | Payroll Calculation and Approval Functions | Planned | Functions | Planned | - | - |
 | 33 | Role Model and Access Policies | Security | Planned | — | — |
 | 34 | Cancellation and Late-Pay Engine | Functions | Planned | — | — |
 | 35 | Completion and Cost Notification Automation | Automation | Planned | — | — |
@@ -708,6 +708,162 @@ The migration verified:
 
 ### Execution result
 
-```text
+
 Query 31 completed successfully
 2026-07-18 05:24:42.732689+00
+
+## Query 32 — Payroll Calculation and Approval Functions
+
+**Status:** Planned  
+**Category:** Functions
+
+### Purpose
+
+Implement the Car Concierge payroll engine on top of the payroll tables created by Query 30.
+
+This migration does not create replacement payroll tables and does not recreate assignment acceptance, decline, reassignment, start, completion, cancellation-pay, calendar, validation, or `updated_at` automation.
+
+### Functions added
+
+- `get_car_concierge_semimonthly_period(date)`
+- `get_car_concierge_payroll_actor_role()`
+- `write_car_concierge_payroll_event(...)`
+- `ensure_car_concierge_payroll_period(date, uuid)`
+- `rebuild_car_concierge_payroll_run(uuid)`
+- `generate_car_concierge_payroll_run(date)`
+- `submit_car_concierge_payroll_run(uuid, text)`
+- `review_car_concierge_payroll_run(uuid, text, text)`
+
+### Payroll-period rules
+
+- First semimonthly period: 1st through 15th.
+- Second semimonthly period: 16th through the final calendar day of the month.
+- Business-date interpretation uses the `America/Chicago` time zone.
+- Timestamps remain stored as authoritative UTC `timestamptz` values.
+
+### Completed assignment pay
+
+- Includes assignments with status `completed` or `approved`.
+- Uses actual `started_at` and `ended_at` timestamps.
+- Calculates payable hours from elapsed time.
+- Uses the assignment-level hourly-rate snapshot.
+- Uses the Central Time date of `ended_at` as the payroll inclusion date.
+- Excludes assignments placed on payroll hold.
+
+### Late-cancellation pay
+
+- Includes canceled assignments only when `cancellation_pay_eligible` is true.
+- Uses the immutable `cancellation_pay_hours`, `cancellation_pay_rate`, and `cancellation_pay_amount` values written by Query 31.
+- Does not recalculate cancellation eligibility or cancellation pay.
+- Uses the Central Time date of `cancelled_at` as the payroll inclusion date.
+- Excludes assignments placed on payroll hold.
+
+### Approved additional costs
+
+- Includes only cost records with status `approved`.
+- Uses only `approved_amount`.
+- Supports partial approval.
+- Does not use the requested amount when it differs from the approved amount.
+- Uses `approved_at`, falling back to `reviewed_at`, as the approval timestamp.
+- Uses the Central Time approval date as the payroll inclusion date.
+- Excludes costs attached to assignments placed on payroll hold.
+
+### Payroll output
+
+- Creates one payroll item per Car Concierge with eligible payroll sources.
+- Creates payroll line items for assignment time, cancellation pay, and approved costs.
+- Stores source snapshots in `source_snapshot`.
+- Calculates contractor total hours.
+- Calculates assignment pay.
+- Calculates cancellation pay.
+- Calculates approved additional costs.
+- Calculates adjustments.
+- Calculates gross pay.
+- Calculates payroll-run totals.
+- Prevents the same assignment-pay, cancellation-pay, or approved-cost source from entering another non-rejected payroll run.
+
+### Payroll workflow
+
+1. An authorized user generates a draft payroll run.
+2. The system calculates and itemizes eligible payroll sources.
+3. The payroll run is submitted for review.
+4. The run changes to `pending_client_services_approval`.
+5. The Client Services Director or authorized CEO reviews the run.
+6. An approved run changes to `approved_for_payout`.
+7. A rejected run changes to `rejected`.
+8. A held run changes to `on_hold`.
+9. Payroll events preserve an append-only audit trail.
+
+### Authorization
+
+Payroll generation, recalculation, and submission support:
+
+- `payroll_team`
+- `admin`
+- `client_services_director`
+- Trusted `service_role` execution
+
+Payroll review supports:
+
+- `admin`
+- `client_services_director`
+- Authorized `ceo`
+- Trusted `service_role` execution
+
+Query 33 will implement the complete payroll role and RLS policy model.
+
+### Audit behavior
+
+The following actions create records in `car_concierge_payroll_events`:
+
+- Payroll calculation
+- Payroll recalculation
+- Payroll submission
+- Payroll approval
+- Payroll rejection
+- Payroll hold
+
+### Verification required
+
+- Confirm a date from the 1st through 15th resolves to the correct period.
+- Confirm a date from the 16th through month-end resolves to the correct period.
+- Generate a run containing a completed assignment.
+- Confirm elapsed assignment hours are calculated correctly.
+- Confirm assignment pay uses the stored hourly rate.
+- Confirm late-cancellation pay uses the immutable Query 31 snapshot.
+- Confirm partially approved costs use `approved_amount`.
+- Confirm pending, denied, and canceled costs are excluded.
+- Confirm payroll-held assignments and their costs are excluded.
+- Confirm duplicate sources cannot enter a second active payroll run.
+- Submit a payroll run.
+- Confirm the run changes to `pending_client_services_approval`.
+- Approve a test payroll run.
+- Reject a test payroll run.
+- Place a test payroll run on hold.
+- Confirm unauthorized users cannot calculate or review payroll.
+- Confirm payroll events are written for every workflow action.
+
+### Rollback
+
+Drop only the functions created by Query 32.
+
+Do not drop:
+
+- Payroll tables from Query 30
+- Assignment lifecycle automation from Query 31
+- Assignment event records
+- Existing assignment workflow functions
+- Existing calendar functions
+- Existing validation functions
+
+### Deployment note
+
+Keep Query 32 marked `Planned` until the migration succeeds in Supabase.
+
+After successful execution:
+
+1. Change the status to `Applied`.
+2. Add the execution date.
+3. Add the person who applied it.
+4. Run the verification tests.
+5. Change the status to `Verified` only after testing succeeds.
