@@ -37,7 +37,7 @@ This file tracks every production database change made to the iAutoAgent Contrac
 | 29 | Assignment, Cost, and Completion Schema Inspection | Inspection | Completed | 2026-07-18 | Brie |
 | 30 | Assignment Lifecycle and Payroll Foundation | Schema | Applied | 2026-07-18 | Brie |
 | 31 | Assignment Event and Lifecycle Automation | Applied | Functions and Triggers | 2026-07-18 | Brie |
-| 32 | Payroll Calculation and Approval Functions | Planned | Functions | Planned | - | - |
+| 32 | Payroll Calculation and Approval Functions | Functions | Applied | 2026-07-18 | Brie |
 | 33 | Role Model and Access Policies | Security | Planned | — | — |
 | 34 | Cancellation and Late-Pay Engine | Functions | Planned | — | — |
 | 35 | Completion and Cost Notification Automation | Automation | Planned | — | — |
@@ -714,7 +714,7 @@ Query 31 completed successfully
 
 ## Query 32 — Payroll Calculation and Approval Functions
 
-**Status:** Planned  
+**Status:** Applied  
 **Category:** Functions
 
 ### Purpose
