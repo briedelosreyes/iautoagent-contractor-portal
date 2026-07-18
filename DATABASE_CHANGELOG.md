@@ -890,3 +890,182 @@ Confirmed behavior:
 - Contractor payroll-item status changed to `approved`.
 - Four payroll audit events were created.
 - All temporary assignments, costs, payroll periods, payroll runs, payroll items, line items, completion records, assignment events, and payroll events were rolled back successfully.
+
+
+## Query 33 — Role Model and Access Policies
+
+**Status:** Planned  
+**Category:** Security
+
+### Purpose
+
+Formalize the approved portal role model and enforce access using stored role assignments, capability functions, table privileges, and Row-Level Security.
+
+### Existing architecture preserved
+
+Query 33 does not recreate assignment, payroll, lifecycle, cancellation, completion, calendar, audit, or notification tables.
+
+The existing tables `portal_role_types`, `profiles`, and `profile_roles` remain the portal identity and role architecture.
+
+### Role catalog changes
+
+The following role types were added to `portal_role_types`:
+
+- `client_services_director`
+- `ceo`
+- `payroll_team`
+
+Existing compatibility roles were preserved:
+
+- `admin` remains a compatibility alias for `client_services_director`.
+- `payroll` remains a compatibility alias for `payroll_team`.
+- `listing_agent` remains active.
+- `car_concierge` remains active.
+- `vfp_agent` remains unchanged.
+
+### Production role assignments
+
+- Brie Delos Reyes receives the active `client_services_director` role.
+- Brie retains the active `admin` compatibility role.
+- Jay Grosman receives the active `ceo` role.
+- Jay retains the active `listing_agent` role.
+- Jay's prior `admin` role assignment is deactivated.
+- Legacy `profiles.role` values remain unchanged for frontend compatibility.
+
+### Authoritative role model
+
+Active rows in `profile_roles` are authoritative.
+
+The legacy `profiles.role` field is used only when a profile has no active stored role assignments.
+
+Compatibility mapping is supported between:
+
+- `admin` and `client_services_director`
+- `payroll` and `payroll_team`
+
+### Access model
+
+#### Client Services Director
+
+Can manage:
+
+- Profiles
+- Portal roles
+- Role catalog
+- Assignment types
+- Listing Agents
+- Assignments
+- Appointments
+- Showing details
+- Closing details
+- Additional costs
+- Notification delivery
+
+Can view:
+
+- All assignments
+- Assignment events
+- Internal notes
+- Deletion audit
+- All payroll records
+
+Can generate, submit, review, approve, reject, and hold payroll through authorized functions.
+
+#### CEO
+
+Can view:
+
+- All assignments
+- Assignment details
+- Assignment events
+- Internal notes
+- Deletion audit
+- All payroll records
+
+Can review, approve, reject, and hold payroll through authorized functions.
+
+The CEO does not receive routine direct assignment-management authority.
+
+#### Payroll Team
+
+Can view:
+
+- Payable assignments
+- Approved costs
+- Payroll periods
+- Payroll runs
+- Payroll items
+- Payroll line items
+- Payroll events
+- Required Car Concierge profile information
+
+Can generate, recalculate, and submit payroll through authorized functions.
+
+Cannot directly update assignments, approve costs, approve payroll, or modify payroll projection tables.
+
+#### Listing Agent
+
+Can:
+
+- View assignments linked to their active Listing Agent record.
+- Create their own draft Showing.
+- Update their own unsent or declined-reassignment Showing.
+- Manage appointments and Showing details for their own draft Showing.
+- View related operational details and events.
+
+Cannot view unrelated assignments or payroll.
+
+#### Car Concierge
+
+Can:
+
+- View their own released assignments.
+- View their own appointments and assignment details.
+- View their own completion records.
+- View their own costs.
+- Submit pending cost requests for their own active assignments.
+- View their own payroll records.
+- View relevant assignment events.
+
+Cannot view another contractor's assignments or payroll.
+
+### Security behavior
+
+- Anonymous table access is revoked.
+- Authenticated privileges are reset to the exact privileges required.
+- RLS remains enabled on all controlled portal tables.
+- Existing overlapping policies are replaced in one transaction.
+- Payroll projection tables remain read-only to ordinary authenticated users.
+- Payroll writes remain controlled by Query 32 functions.
+- Assignment and payroll event tables remain append-only.
+- Deletion-audit records remain read-only.
+- `assignment_pay_summary` uses invoker security and obeys underlying RLS.
+
+### Verification required
+
+- Confirm the migration returns success.
+- Confirm Brie has active `client_services_director` and `admin` roles.
+- Confirm Jay has active `ceo` and `listing_agent` roles.
+- Confirm Jay's `admin` assignment is inactive.
+- Confirm Brie can still load and use the administrative portal.
+- Confirm Jay can view all assignments but cannot directly update routine assignments.
+- Confirm Jay can view payroll.
+- Confirm Car Concierges see only their own assignments.
+- Confirm Car Concierges see only their own payroll.
+- Confirm Listing Agents see only linked assignments.
+- Confirm Listing Agents can manage only their own draft Showings.
+- Confirm Payroll Team access after a Payroll Team user is assigned.
+- Confirm anonymous access is denied.
+- Confirm assignment acceptance, decline, start, completion, costs, and calendar workflows still function.
+- Confirm Query 32 payroll functions still function.
+
+### Deployment note
+
+Keep Query 33 marked `Planned` until the corrected migration runs successfully.
+
+After successful execution:
+
+1. Change Query 33 to `Applied`.
+2. Record the execution date and operator.
+3. Run the Query 33 verification tests.
+4. Change Query 33 to `Verified` only after every role boundary passes.
