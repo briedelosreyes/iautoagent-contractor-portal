@@ -1688,3 +1688,17 @@ Recommended root structure:
 ```
 
 The master specification and database change log belong in the repository root because they govern the entire project.
+
+
+### Query 34F — Edge Function Service-Role Grants
+
+The user-management Edge Function initially received a PostgreSQL permission error while saving commission eligibility.
+
+Granted the `service_role` database role the required privileges on:
+
+- `profile_commission_eligibility`
+- `portal_user_lifecycle_events`
+
+Verified SELECT, INSERT, and UPDATE access required by the Edge Function.
+
+The correction did not change any commission eligibility or user lifecycle records.
