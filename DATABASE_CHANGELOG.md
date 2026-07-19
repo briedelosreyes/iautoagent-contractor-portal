@@ -39,7 +39,7 @@ This file tracks every production database change made to the iAutoAgent Contrac
 | 31 | Assignment Event and Lifecycle Automation | Applied | Functions and Triggers | 2026-07-18 | Brie |
 | 32 | Payroll Calculation and Approval Functions | Functions | Verified | 2026-07-18 | Brie |
 | 33 | Role Model and Access Policies | Security | Applied | 2026-07-18 | Brie |
-| 34 | Cancellation and Late-Pay Engine | Functions | Planned | — | — |
+| 34 | 2026-07-18 | User Archiving and Commission Eligibility | Verified | Brie Delos Reyes | 25 static checks and 18 controlled rollback checks passed. Portal and Edge Function implementation pending. |
 | 35 | Completion and Cost Notification Automation | Automation | Planned | — | — |
 | 36 | Assignment Deletion Function and Audit Workflow | Functions | Planned | — | — |
 | 37 | Payroll Notification Outbox Events | Automation | Planned | — | — |
@@ -1069,3 +1069,71 @@ After successful execution:
 2. Record the execution date and operator.
 3. Run the Query 33 verification tests.
 4. Change Query 33 to `Verified` only after every role boundary passes.
+
+
+## Query 34 — User Archiving and Commission Eligibility
+
+**Date:** 2026-07-18  
+**Status:** Verified  
+**Operator:** Brie Delos Reyes
+
+### Summary
+
+Added an audit-safe portal user lifecycle and separated commission eligibility from portal roles.
+
+The existing `listing_agent` database role remains unchanged for compatibility, but its visible role name is now **Sell Smart Agent**.
+
+Jay Grosman retains the `ceo` and `listing_agent` roles for CEO oversight and Sell Smart operational access. He is explicitly ineligible for commissions across all supported commission programs.
+
+### Database Changes
+
+- Added archive fields to `profiles`:
+  - `archived_at`
+  - `archived_by_profile_id`
+  - `archive_reason`
+- Added `portal_user_lifecycle_events`.
+- Added `profile_commission_eligibility`.
+- Added program-specific commission eligibility for:
+  - Vehicle Finder
+  - Vehicle Protection Plan
+  - Sell Smart
+  - Cash Buyer
+- Added `portal_profile_is_commission_eligible(...)`.
+- Added `commission_agent_category_for_program(...)`.
+- Replaced legacy commission-trigger dependency on `profiles.role = 'sales_agent'`.
+- Added automatic exclusion for commission-ineligible recipients.
+- Added commission company-summary, recipient-summary, and detailed-reporting views.
+- Added CEO read access to company-wide commission records.
+- Preserved recipient-only access to finalized personal commissions.
+- Added `archive_portal_user(...)`.
+- Added `restore_portal_user(...)`.
+- Added `portal_user_hard_delete_assessment(...)`.
+- Added user lifecycle audit history.
+- Removed anonymous access from new lifecycle and eligibility resources.
+- Preserved all existing commission rules and generated commission formulas.
+
+### Business Rules
+
+- Archiving is the standard method for removing portal access.
+- Archived users retain historical assignments, payroll, commissions, and audit records.
+- A user with unresolved assignments cannot be archived.
+- A Client Services Director cannot archive their own account.
+- Permanent deletion is restricted to unused archived accounts with no sign-in or historical references.
+- Sell Smart Agent access does not automatically create commission eligibility.
+- Jay Grosman does not receive commissions.
+- The CEO can view total company commissions and detailed recipient amounts.
+
+### Corrections During Deployment
+
+The initial migration referenced `commission_items.paid_at`, which does not exist. The reporting view was corrected to use `commission_runs.paid_at`.
+
+The failed transaction was automatically rolled back before the corrected migration was rerun.
+
+### Verification
+
+- Static verification: 25 of 25 checks passed.
+- Controlled rollback verification: 18 of 18 checks passed.
+- Existing commission rules preserved: 8.
+- Unexpected commission runs created: 0.
+- Unexpected commission items created: 0.
+- Temporary role, commission, archive, directory, and lifecycle test records were rolled back.
