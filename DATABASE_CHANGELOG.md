@@ -36,14 +36,19 @@ This file tracks every production database change made to the iAutoAgent Contrac
 | 28 | Grant Service Role Access to Contractor Portal Tables | Permissions | Applied | 2026-07 | Brie |
 | 29 | Assignment, Cost, and Completion Schema Inspection | Inspection | Completed | 2026-07-18 | Brie |
 | 30 | Assignment Lifecycle and Payroll Foundation | Schema | Applied | 2026-07-18 | Brie |
-| 31 | Assignment Event and Lifecycle Automation | Applied | Functions and Triggers | 2026-07-18 | Brie |
+| 31 | Assignment Event and Lifecycle Automation | Functions and Triggers | Applied | 2026-07-18 | Brie |
 | 32 | Payroll Calculation and Approval Functions | Functions | Verified | 2026-07-18 | Brie |
 | 33 | Role Model and Access Policies | Security | Applied | 2026-07-18 | Brie |
-| 34 | 2026-07-18 | User Archiving and Commission Eligibility | Verified | Brie Delos Reyes | 25 static checks and 18 controlled rollback checks passed. Portal and Edge Function implementation pending. |
-| 35 | Completion and Cost Notification Automation | Automation | Planned | — | — |
-| 36 | Assignment Deletion Function and Audit Workflow | Functions | Planned | — | — |
+| 34 | User Archiving and Commission Eligibility | User Management and Security | Verified | 2026-07-18 | Brie Delos Reyes |
+| 35 | Open Assignment Pool and Atomic Claiming | Assignment Automation | Fully Verified | 2026-07-19 | Brie Delos Reyes |
+| 35E | Add General Area to Open Assignment Pool | Privacy and Portal UI | Verified | 2026-07-19 | Brie Delos Reyes |
+| 35G | Synchronize Reassigned Client Calendar Titles | Calendar Automation | Verified | 2026-07-19 | Brie Delos Reyes |
+| 35I | Automatic Assignment Acceptance Notifications | Notification Automation | Verified | 2026-07-19 | Brie Delos Reyes |
+| 35J | Backfill Assignment #8 Acceptance Confirmation | Data Correction | Completed | 2026-07-19 | Brie Delos Reyes |
+| 36 | Assignment Soft Delete and Calendar Removal | Functions and Automation | Planned | — | — |
 | 37 | Payroll Notification Outbox Events | Automation | Planned | — | — |
----
+
+------
 
 # Detailed Change Records
 
@@ -1137,3 +1142,45 @@ The failed transaction was automatically rolled back before the corrected migrat
 - Unexpected commission runs created: 0.
 - Unexpected commission items created: 0.
 - Temporary role, commission, archive, directory, and lifecycle test records were rolled back.
+
+
+Query 35 — Open Assignment Pool and Atomic Claiming
+Status: Completed and Fully Verified
+
+Implemented:
+- Added a sanitized Open Assignment Pool for active Car Concierges.
+- Added atomic “Grab Assignment” claiming to prevent double-claims.
+- Prevented the original decliner from reclaiming the same assignment.
+- Preserved all request, decline, reassignment, claim, and acceptance history.
+- Hid client details, exact addresses, notes, calendar details, and hourly rates before claim.
+- Added sanitized general-area display for open-pool cards.
+- Snapshot the claiming Car Concierge’s current default hourly rate.
+- Automatically assigned and accepted the claimed assignment.
+- Automatically released and synchronized client-facing and internal calendar events.
+- Automatically updated calendar titles to the newly assigned Car Concierge.
+- Added scheduler acceptance-confirmation emails.
+- Added idempotent notification processing to prevent duplicate emails.
+- Updated the portal URL used by the automation to:
+  https://portal.iautoagent.com/
+- Preserved retry capability for calendar and notification failures without reversing assignment ownership.
+
+Live verification:
+- Declined assignment entered the Open Assignment Pool.
+- Steve Ellis successfully claimed the assignment.
+- Assignment ownership changed to Steve Ellis.
+- Open-pool card disappeared immediately after claim.
+- Client-facing calendar invite updated to Steve Ellis.
+- Internal Car Concierge calendar invite updated to Steve Ellis.
+- Scheduler automatically received the acceptance-confirmation email.
+- No manual retry actions were required.
+- Original decline history remained preserved.
+- Original decliner could not reclaim the assignment.
+
+Related corrections:
+- Query 35E — Added sanitized general-area display.
+- Query 35G — Synced reassigned client-facing calendar titles.
+- Query 35I — Added automatic assignment-accepted notifications.
+- Query 35J — Backfilled the acceptance notification for the earlier test assignment.
+
+Final result:
+Open-pool reassignment now works automatically from decline through claim, calendar synchronization, and scheduler notification.
