@@ -1,0 +1,2230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#612d91">
+  <title>iAutoAgent Contractor Portal</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --purple:#612d91; --purple-dark:#421d68; --purple-soft:#f4eef9;
+      --green:#84bd00; --green-dark:#557b00; --green-soft:#f2f9df;
+      --ink:#211a29; --muted:#716979; --line:#e6e0e9; --surface:#fff;
+      --page:#f7f5f8; --danger:#b42318; --danger-soft:#fff0ef;
+      --warning:#9a6700; --warning-soft:#fff8e5; --success:#257a42;
+      --success-soft:#ecfdf3; --info:#175cd3; --info-soft:#eff8ff;
+      --shadow:0 18px 48px rgba(51,27,68,.10); --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html{min-height:100%;background:var(--page);scroll-behavior:smooth}
+    body{min-height:100vh;margin:0;color:var(--ink);background:radial-gradient(circle at 5% 0,rgba(132,189,0,.12),transparent 28%),radial-gradient(circle at 95% 0,rgba(97,45,145,.13),transparent 30%),var(--page);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+    button,input,select,textarea{font:inherit} button{cursor:pointer} a{color:var(--purple)}
+    .hidden{display:none!important}.shell{width:min(1220px,calc(100% - 30px));margin:0 auto}
+    .brand{display:flex;align-items:center;gap:12px;min-width:0}.brand-mark{display:grid;width:43px;height:43px;place-items:center;flex:0 0 auto;border-radius:13px;color:#fff;background:linear-gradient(135deg,var(--purple),var(--purple-dark));font-weight:850;box-shadow:0 10px 26px rgba(97,45,145,.24)}
+    .brand-name{font-weight:850;letter-spacing:-.02em}.brand-subtitle{margin-top:2px;color:var(--muted);font-size:.8rem}
+    .login-page{display:grid;min-height:100vh;place-items:center;padding:32px 0}.login-card{width:min(460px,100%);padding:34px;border:1px solid rgba(97,45,145,.13);border-radius:24px;background:rgba(255,255,255,.98);box-shadow:var(--shadow)}
+    .login-card h1{margin:30px 0 8px;font-size:clamp(1.8rem,4vw,2.35rem);letter-spacing:-.04em}.login-card>p{margin:0 0 25px;color:var(--muted);line-height:1.55}
+    .topbar{position:sticky;top:0;z-index:20;border-bottom:1px solid rgba(97,45,145,.10);background:rgba(255,255,255,.94);backdrop-filter:blur(18px)}
+    .topbar-inner{display:flex;min-height:73px;align-items:center;justify-content:space-between;gap:18px}.user-menu{display:flex;align-items:center;gap:12px}.user-meta{display:grid;text-align:right}.user-meta span{color:var(--muted);font-size:.78rem}
+    .portal-grid{display:grid;grid-template-columns:230px minmax(0,1fr);gap:24px;padding:24px 0 48px}.sidebar{position:sticky;top:97px;height:max-content;padding:12px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.92);box-shadow:0 10px 28px rgba(50,30,64,.05)}
+    .nav-button{width:100%;min-height:45px;margin:2px 0;border:0;border-radius:11px;padding:10px 12px;text-align:left;background:transparent;color:var(--ink);font-weight:760}.nav-button:hover{background:var(--purple-soft)}.nav-button.active{background:var(--purple);color:#fff}.nav-button[disabled]{cursor:not-allowed;opacity:.45}
+    .content{min-width:0}.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:22px;padding:25px;border:1px solid rgba(97,45,145,.12);border-radius:22px;background:rgba(255,255,255,.92);box-shadow:var(--shadow)}
+    .eyebrow{margin:0 0 7px;color:var(--purple);font-size:.76rem;font-weight:850;letter-spacing:.12em;text-transform:uppercase}.hero h1{margin:0;font-size:clamp(1.9rem,4vw,2.75rem);line-height:1.04;letter-spacing:-.05em}.hero p:not(.eyebrow){max-width:720px;margin:10px 0 0;color:var(--muted);line-height:1.55}.hero-actions,.card-actions{display:flex;flex-wrap:wrap;gap:9px}
+    .summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:18px 0}.summary-card{padding:19px;border:1px solid var(--line);border-radius:17px;background:rgba(255,255,255,.94)}.summary-label{color:var(--muted);font-size:.77rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.summary-value{margin-top:8px;font-size:1.65rem;font-weight:850;letter-spacing:-.04em}
+    .section-heading{display:flex;align-items:end;justify-content:space-between;gap:15px;margin:28px 0 12px}.section-heading h2{margin:0;font-size:1.3rem}.section-heading span{color:var(--muted);font-size:.84rem}
+    .assignment-list,.directory-grid{display:grid;gap:14px}.assignment-card,.directory-card,.empty-card{padding:20px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.96);box-shadow:0 8px 24px rgba(56,35,69,.05)}
+    .assignment-top{display:flex;align-items:start;justify-content:space-between;gap:14px}.assignment-number{margin:0 0 5px;color:var(--purple);font-size:.77rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.assignment-card h3{margin:0;font-size:1.18rem;letter-spacing:-.02em}.assignment-sub{margin:7px 0 0;color:var(--muted);font-size:.88rem}
+    .detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:17px 0}.detail-grid-four{grid-template-columns:repeat(4,minmax(0,1fr))}.detail{min-width:0;padding:12px;border-radius:12px;background:#faf9fb}.detail-label{display:block;margin-bottom:4px;color:var(--muted);font-size:.71rem;font-weight:820;text-transform:uppercase;letter-spacing:.05em}.detail-value{display:block;overflow-wrap:anywhere;font-size:.9rem;font-weight:700}
+    .appointment-list{display:grid;gap:10px;margin:14px 0}.appointment-card{padding:15px;border:1px solid var(--line);border-radius:14px;background:#fcfbfd}.appointment-head{display:flex;justify-content:space-between;gap:10px;align-items:start}.appointment-head h4{margin:0;font-size:1rem}.appointment-meta{margin-top:5px;color:var(--muted);font-size:.82rem;line-height:1.5}.appointment-contact{margin:11px 0 0;padding:11px;border-radius:10px;background:#f7f4f9;font-size:.86rem;line-height:1.55}
+    .instructions,.panel,.private-panel,.request-panel,.requirements-panel{margin:13px 0;padding:14px;border-radius:13px;line-height:1.55}.instructions{background:var(--purple-soft)}.panel{border:1px solid var(--line);background:#fafafa}.private-panel{background:var(--info-soft);color:#163f82}.request-panel{background:var(--warning-soft)}.requirements-panel{background:var(--green-soft)}.panel-title{display:block;margin-bottom:6px;font-size:.75rem;font-weight:850;letter-spacing:.07em;text-transform:uppercase}
+    .badge{display:inline-flex;align-items:center;min-height:25px;border-radius:999px;padding:4px 9px;font-size:.72rem;font-weight:850;white-space:nowrap}.badge-purple{color:var(--purple-dark);background:var(--purple-soft)}.badge-green{color:var(--success);background:var(--success-soft)}.badge-yellow{color:var(--warning);background:var(--warning-soft)}.badge-red{color:var(--danger);background:var(--danger-soft)}.badge-blue{color:var(--info);background:var(--info-soft)}
+    .button{display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:10px 16px;font-weight:820;text-decoration:none;transition:transform .14s ease,opacity .14s ease,box-shadow .14s ease;touch-action:manipulation}.button:hover:not(:disabled){transform:translateY(-1px)}.button:disabled{cursor:not-allowed;opacity:.48}.button-primary,.button-purple{color:#fff;background:var(--purple);box-shadow:0 8px 20px rgba(97,45,145,.19)}.button-green{color:#182800;background:var(--green)}.button-light{color:var(--ink);border:1px solid var(--line);background:#fff}.button-danger{color:#fff;background:var(--danger)}.button-small{min-height:35px;padding:7px 11px;font-size:.78rem}.button-full{width:100%}
+    .card-actions{margin-top:15px;padding-top:15px;border-top:1px solid var(--line)}
+    .notice{margin:0 0 16px;padding:13px 15px;border-radius:12px;line-height:1.45}.notice-error{color:#7a271a;background:var(--danger-soft);border:1px solid #f4c7c3}.notice-success{color:#1d5d35;background:var(--success-soft);border:1px solid #b7ebc6}.notice-info{color:#184a93;background:var(--info-soft);border:1px solid #c5ddff}.inline-error{margin-top:10px;color:var(--danger);font-size:.82rem;font-weight:760}
+    .field{display:grid;gap:7px;margin-bottom:15px;min-width:0}.field label{font-size:.86rem;font-weight:800}.field input,.field select,.field textarea{width:100%;min-height:48px;border:1px solid #d8d1dc;border-radius:12px;padding:0 13px;outline:none;background:#fff;color:var(--ink);font-size:16px}.field textarea{min-height:105px;padding-top:12px;padding-bottom:12px;resize:vertical;line-height:1.5}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--purple);box-shadow:0 0 0 4px rgba(97,45,145,.11)}.field-help{color:var(--muted);font-size:.75rem;line-height:1.4}.field input[readonly]{background:#f7f5f8}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 15px}.field-full{grid-column:1/-1}.checkbox-row{display:flex;align-items:flex-start;gap:9px;margin:7px 0 15px;line-height:1.45}.checkbox-row input{width:20px;height:20px;margin-top:1px;accent-color:var(--purple)}.role-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;margin:5px 0 16px}.role-grid .checkbox-row{margin:0}.user-rate{font-weight:850;color:var(--green-dark)}
+    .commission-eligibility-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.commission-option{display:flex;align-items:flex-start;gap:10px;padding:13px;border:1px solid var(--line);border-radius:13px;background:#fff}.commission-option input{width:20px;height:20px;flex:0 0 auto;margin:1px 0 0;accent-color:var(--purple)}.commission-option-copy{display:grid;gap:3px}.commission-option-copy strong{font-size:.85rem}.commission-option-copy small{color:var(--muted);font-size:.72rem;line-height:1.35}.commission-option:has(input:checked){border-color:var(--green-dark);background:var(--green-soft)}.archive-card{border-color:#efc7c3;background:#fffafa}.archive-reason{margin-top:10px;padding:11px;border-radius:11px;background:var(--danger-soft);color:#7a271a;font-size:.82rem;line-height:1.45}.user-section-note{margin:0;color:var(--muted);font-size:.78rem;line-height:1.45}.button-warning{color:#5f3b00;background:var(--warning-soft);border:1px solid #ead49d}.button-text-danger{color:var(--danger);border:1px solid #efc7c3;background:#fff}.commission-status-line{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.commission-status-line .badge{white-space:normal}.danger-panel{margin-top:14px;padding:14px;border:1px solid #efc7c3;border-radius:14px;background:var(--danger-soft);color:#7a271a}.danger-panel strong{display:block;margin-bottom:4px}.danger-panel p{margin:0;font-size:.78rem;line-height:1.45}.user-filter-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:24px 0 12px}.user-filter-label{font-size:.82rem;font-weight:850;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}.user-filter-group{display:inline-flex;gap:5px;padding:5px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.92);box-shadow:0 7px 20px rgba(56,35,69,.04)}.user-filter-button{min-height:40px;border:0;border-radius:10px;padding:8px 14px;background:transparent;color:var(--muted);font-weight:820}.user-filter-button:hover{background:var(--purple-soft);color:var(--purple-dark)}.user-filter-button.active{background:var(--purple);color:#fff;box-shadow:0 7px 18px rgba(97,45,145,.18)}
+    .user-dialog{width:min(780px,calc(100% - 26px))}.user-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.user-form-grid .field{margin-bottom:0}.user-section{margin-top:20px;padding:17px;border:1px solid var(--line);border-radius:16px;background:#fcfbfd}.user-section-header{display:flex;align-items:start;justify-content:space-between;gap:18px;margin-bottom:13px}.user-section-header h3{margin:0;font-size:1rem}.user-section-header p{max-width:430px;margin:2px 0 0;color:var(--muted);font-size:.78rem;line-height:1.45}.role-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.role-option{display:flex;min-height:76px;align-items:flex-start;gap:11px;margin:0;padding:13px;border:1px solid var(--line);border-radius:13px;background:#fff;cursor:pointer;transition:border-color .14s ease,box-shadow .14s ease,background .14s ease}.role-option:hover{border-color:#cdb8df;background:#fdfbff}.role-option:has(input:checked){border-color:var(--purple);background:var(--purple-soft);box-shadow:0 0 0 3px rgba(97,45,145,.08)}.role-option input{width:20px;height:20px;flex:0 0 auto;margin:1px 0 0;accent-color:var(--purple)}.role-option-copy{display:grid;gap:3px;min-width:0}.role-option-copy strong{font-size:.85rem}.role-option-copy small{color:var(--muted);font-size:.72rem;line-height:1.35}.role-option-admin{grid-column:1/-1}.user-rate-panel{margin-top:14px;padding:15px;border:1px solid #cfe2a2;border-radius:14px;background:var(--green-soft)}.user-rate-panel .field{margin:0}.money-input{position:relative}.money-input>span{position:absolute;left:14px;top:50%;z-index:1;transform:translateY(-50%);font-weight:850;color:var(--green-dark)}.money-input input{padding-left:31px}.active-account-panel{display:flex;align-items:flex-start;gap:11px;margin:14px 0 0;padding:14px 15px;border:1px solid var(--line);border-radius:14px;background:#fff;line-height:1.4}.active-account-panel input{width:20px;height:20px;flex:0 0 auto;margin:1px 0 0;accent-color:var(--purple)}.active-account-copy{display:grid;gap:2px}.active-account-copy strong{font-size:.86rem}.active-account-copy small{color:var(--muted);font-size:.74rem}
+    details.form-section{margin:0 0 14px;border:1px solid var(--line);border-radius:15px;background:#fff;overflow:hidden}details.form-section>summary{cursor:pointer;padding:15px 17px;font-weight:850;background:#faf9fb}details.form-section[open]>summary{border-bottom:1px solid var(--line)}.section-body{padding:17px}.subtle-panel{margin-bottom:16px;padding:13px;border-radius:12px;color:#554c5e;background:#f7f4f9;line-height:1.5;font-size:.86rem}.rate-preview{display:flex;min-height:48px;align-items:center;border-radius:12px;padding:0 13px;background:var(--green-soft);font-weight:850}
+    dialog{border:0;padding:0;background:transparent}.dialog{width:min(900px,calc(100% - 26px));max-height:92dvh;border-radius:22px;background:#fff;box-shadow:0 24px 80px rgba(33,20,44,.28)}.dialog::backdrop{background:rgba(25,16,31,.58);backdrop-filter:blur(3px)}.dialog-shell{display:flex;max-height:92dvh;flex-direction:column}.dialog-header{display:flex;align-items:start;justify-content:space-between;gap:15px;padding:21px 23px 16px;border-bottom:1px solid var(--line)}.dialog-header h2{margin:0;font-size:1.35rem}.dialog-header p{margin:6px 0 0;color:var(--muted);font-size:.85rem}.dialog-close{display:grid;width:38px;height:38px;place-items:center;border:0;border-radius:11px;background:#f5f2f6;font-size:1.4rem}.dialog-body{overflow:auto;padding:20px 23px 6px}.dialog-footer{display:flex;justify-content:flex-end;gap:9px;padding:14px 23px 19px;border-top:1px solid var(--line);background:#fff}
+    .mini-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}.mini-list li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.07)}.mini-list li:last-child{border:0}.loading{display:grid;min-height:360px;place-items:center;color:var(--muted)}.spinner{width:31px;height:31px;margin:0 auto 10px;border:3px solid #e6dfeb;border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+    .directory-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.directory-card h3{margin:0}.directory-meta{margin-top:10px;color:var(--muted);line-height:1.6}.commission-table{width:100%;border-collapse:collapse;background:#fff}.commission-table th,.commission-table td{padding:12px;border-bottom:1px solid var(--line);text-align:left;font-size:.84rem}.commission-table th{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:#fff}
+    @media(max-width:900px){.portal-grid{grid-template-columns:1fr}.sidebar{position:static;display:flex;overflow:auto}.nav-button{width:auto;white-space:nowrap}.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-grid,.detail-grid-four{grid-template-columns:repeat(2,minmax(0,1fr))}.directory-grid{grid-template-columns:1fr}}
+    @media(max-width:640px){.shell{width:min(100% - 20px,1220px)}.topbar-inner{min-height:67px}.user-meta{display:none}.portal-grid{padding-top:14px}.hero{display:grid;padding:19px}.hero-actions{display:grid;grid-template-columns:1fr;width:100%}.hero-actions .button{width:100%;min-height:49px}.summary-grid{gap:9px}.summary-card{padding:15px}.detail-grid,.form-grid,.user-form-grid,.role-card-grid,.commission-eligibility-grid{grid-template-columns:1fr}.field-full,.role-option-admin{grid-column:auto}.user-section-header{display:grid;gap:4px}.assignment-card{padding:16px}.card-actions{display:grid;grid-template-columns:1fr}.card-actions .button{width:100%;min-height:49px}.dialog{width:100%;max-width:none;max-height:100dvh;margin:0;border-radius:0}.dialog-shell{max-height:100dvh}.dialog-header{padding:17px 15px 13px}.dialog-body{padding:15px 15px 4px}.dialog-footer{display:grid;grid-template-columns:1fr;padding:11px 15px calc(11px + env(safe-area-inset-bottom))}.dialog-footer .button{width:100%;min-height:50px}.appointment-head{display:grid}.mini-list li{display:grid}}
+  </style>
+</head>
+<body>
+  <main id="loginPage" class="login-page">
+    <div class="shell" style="display:grid;place-items:center">
+      <section class="login-card">
+        <div class="brand"><div class="brand-mark">iA</div><div><div class="brand-name">iAutoAgent</div><div class="brand-subtitle">Contractor Portal</div></div></div>
+        <h1>Sign in to your portal</h1>
+        <p>Manage assignments, acceptance, calendar invitations, contractor time, and projected commissions.</p>
+        <div id="loginNotice" class="notice hidden" role="alert"></div>
+        <form id="loginForm">
+          <div class="field"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="username" required></div>
+          <div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required></div>
+          <button id="loginButton" class="button button-primary button-full" type="submit">Sign In</button>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <main id="portalPage" class="hidden">
+    <header class="topbar"><div class="shell topbar-inner">
+      <div class="brand"><div class="brand-mark">iA</div><div><div class="brand-name">iAutoAgent</div><div class="brand-subtitle">Contractor Portal</div></div></div>
+      <div class="user-menu"><div class="user-meta"><strong id="userName">User</strong><span id="userRole">Role</span></div><button id="signOutButton" class="button button-light" type="button">Sign Out</button></div>
+    </div></header>
+    <div class="shell portal-grid">
+      <aside id="sidebar" class="sidebar" aria-label="Portal navigation"></aside>
+      <section class="content"><div id="portalNotice" class="notice hidden" role="alert"></div><div id="portalContent" class="loading"><div><div class="spinner"></div>Loading portal…</div></div></section>
+    </div>
+  </main>
+
+  <dialog id="assignmentDialog" class="dialog">
+    <form id="assignmentForm" class="dialog-shell">
+      <div class="dialog-header"><div><h2 id="assignmentDialogTitle">Create Assignment</h2><p>Complete every calendar field before sending the assignment for acceptance.</p></div><button class="dialog-close" type="button" data-close-dialog="assignmentDialog">×</button></div>
+      <div class="dialog-body">
+        <input id="assignmentId" name="assignment_id" type="hidden">
+        <input id="assignmentExistingStatus" type="hidden">
+        <div id="assignmentFormNotice" class="notice hidden"></div>
+        <div class="subtle-panel">No client or Car Concierge calendar invitation is sent until the selected Car Concierge accepts the assignment.</div>
+        <details class="form-section" open><summary>Assignment Setup</summary><div class="section-body">
+          <div class="form-grid">
+            <div class="field"><label for="assignmentType">Assignment Type</label><select id="assignmentType" required></select></div>
+            <div class="field"><label for="assignmentConcierge">Car Concierge</label><select id="assignmentConcierge" required></select></div>
+            <div class="field"><label>Hourly Rate</label><div id="assignmentRatePreview" class="rate-preview">—</div></div>
+            <div id="listingAgentField" class="field hidden"><label for="assignmentListingAgent">Sell Smart Agent</label><select id="assignmentListingAgent"></select></div>
+            <div class="field field-full"><label for="assignmentVehicle">Vehicle</label><input id="assignmentVehicle" type="text" placeholder="Year Make Model"></div>
+            <div class="field field-full"><label for="assignmentTitle">Internal Assignment Title</label><input id="assignmentTitle" type="text" required></div>
+            <div id="organizerField" class="field hidden"><label for="assignmentOrganizer">Client Event Organizer</label><select id="assignmentOrganizer"><option value="admin">Client Services Director</option><option value="listing_agent">Sell Smart Agent</option></select></div>
+            <div class="field field-full"><label for="assignmentDescription">Overall Internal Notes</label><textarea id="assignmentDescription" placeholder="Optional notes that apply to the complete assignment"></textarea></div>
+          </div>
+          <button id="generateTitlesButton" class="button button-light button-small" type="button">Generate Suggested Event Titles</button>
+        </div></details>
+        <div id="assignmentDynamicFields"></div>
+      </div>
+      <div class="dialog-footer">
+        <button class="button button-light" type="button" data-close-dialog="assignmentDialog">Cancel</button>
+        <button id="saveDraftButton" class="button button-light" type="submit" data-mode="save">Save Draft</button>
+        <button id="sendAcceptanceButton" class="button button-purple" type="submit" data-mode="send">Save and Send for Acceptance</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="archiveAssignmentDialog" class="dialog">
+    <form id="archiveAssignmentForm" class="dialog-shell">
+      <div class="dialog-header">
+        <div>
+          <h2>Archive Assignment</h2>
+          <p>The assignment will be removed from active portal views but permanently retained in the audit history.</p>
+        </div>
+        <button class="dialog-close" type="button" data-close-dialog="archiveAssignmentDialog" aria-label="Close">×</button>
+      </div>
+      <div class="dialog-body">
+        <input id="archiveAssignmentId" type="hidden">
+        <div id="archiveAssignmentNotice" class="notice hidden"></div>
+        <div id="archiveAssignmentSummary" class="subtle-panel"></div>
+        <div class="field">
+          <label for="archiveAssignmentReason">Reason for Archiving</label>
+          <textarea id="archiveAssignmentReason" required placeholder="Explain why this assignment should be archived."></textarea>
+          <span class="field-help">This reason becomes part of the permanent assignment audit record.</span>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="button button-light" type="button" data-close-dialog="archiveAssignmentDialog">Cancel</button>
+        <button id="confirmArchiveAssignmentButton" class="button button-danger" type="submit">Archive Assignment</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="listingAgentDialog" class="dialog">
+    <form id="listingAgentForm" class="dialog-shell">
+      <div class="dialog-header"><div><h2 id="listingAgentDialogTitle">Add Sell Smart Agent</h2><p>Sell Smart Agents can organize their own Showings when their calendar is shared with Brie.</p></div><button class="dialog-close" type="button" data-close-dialog="listingAgentDialog">×</button></div>
+      <div class="dialog-body">
+        <input id="listingAgentId" type="hidden"><div id="listingAgentFormNotice" class="notice hidden"></div>
+        <div class="form-grid">
+          <div class="field"><label for="listingAgentName">Full Name</label><input id="listingAgentName" required></div>
+          <div class="field"><label for="listingAgentPhone">Phone Number</label><input id="listingAgentPhone" required></div>
+          <div class="field"><label for="listingAgentEmail">iAutoAgent Email</label><input id="listingAgentEmail" type="email"></div>
+          <div class="field"><label for="listingAgentProfile">Linked Portal Account</label><select id="listingAgentProfile"><option value="">Not linked</option></select></div>
+          <div class="field field-full"><label for="listingAgentCalendar">Google Calendar ID</label><input id="listingAgentCalendar" placeholder="agent@iautoagent.com"><span class="field-help">The calendar must be shared with brie@iautoagent.com with permission to make changes.</span></div>
+        </div>
+        <label class="checkbox-row"><input id="listingAgentCanOrganize" type="checkbox" checked><span>May organize Showing client events</span></label>
+        <label class="checkbox-row"><input id="listingAgentActive" type="checkbox" checked><span>Active Sell Smart Agent</span></label>
+      </div>
+      <div class="dialog-footer"><button class="button button-light" type="button" data-close-dialog="listingAgentDialog">Cancel</button><button id="saveListingAgentButton" class="button button-purple" type="submit">Save Sell Smart Agent</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="passwordSetupDialog" class="dialog">
+    <form id="passwordSetupForm" class="dialog-shell">
+      <div class="dialog-header"><div><h2>Set Your Portal Password</h2><p>Create the password you will use to sign in to the iAutoAgent Contractor Portal.</p></div></div>
+      <div class="dialog-body"><div id="passwordSetupNotice" class="notice hidden"></div><div class="field"><label for="newPortalPassword">New Password</label><input id="newPortalPassword" type="password" minlength="8" autocomplete="new-password" required></div><div class="field"><label for="confirmPortalPassword">Confirm Password</label><input id="confirmPortalPassword" type="password" minlength="8" autocomplete="new-password" required></div></div>
+      <div class="dialog-footer"><button id="savePortalPasswordButton" class="button button-purple" type="submit">Save Password</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="userDialog" class="dialog user-dialog">
+    <form id="userForm" class="dialog-shell">
+      <div class="dialog-header">
+        <div>
+          <h2 id="userDialogTitle">Add Portal User</h2>
+          <p>Assign portal roles, set Car Concierge pay, and control commission eligibility separately.</p>
+        </div>
+        <button class="dialog-close" type="button" data-close-dialog="userDialog" aria-label="Close">×</button>
+      </div>
+      <div class="dialog-body">
+        <input id="userProfileId" type="hidden">
+        <div id="userFormNotice" class="notice hidden"></div>
+
+        <div class="user-form-grid">
+          <div class="field">
+            <label for="userFullName">Full Name</label>
+            <input id="userFullName" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="userEmail">Email Address</label>
+            <input id="userEmail" type="email" autocomplete="email" required>
+            <span class="field-help">New users receive a secure invitation email. Existing account emails cannot be changed here.</span>
+          </div>
+        </div>
+
+        <section class="user-section" aria-labelledby="portalAccessHeading">
+          <div class="user-section-header">
+            <div>
+              <h3 id="portalAccessHeading">Portal Access</h3>
+              <p>Select every role this person needs. Roles control access, not commission eligibility.</p>
+            </div>
+          </div>
+          <div class="role-card-grid">
+            <label class="role-option role-option-admin">
+              <input type="checkbox" data-user-role="client_services_director">
+              <span class="role-option-copy"><strong>Client Services Director</strong><small>Manages users, assignments, approvals, private locations, and contractor payroll.</small></span>
+            </label>
+            <label class="role-option">
+              <input type="checkbox" data-user-role="ceo">
+              <span class="role-option-copy"><strong>CEO</strong><small>Views company assignments, payroll, and company-wide commissions without routine user-management authority.</small></span>
+            </label>
+            <label class="role-option">
+              <input type="checkbox" data-user-role="car_concierge">
+              <span class="role-option-copy"><strong>Car Concierge</strong><small>Receives assignments, tracks time, completes work, and views their own contractor pay.</small></span>
+            </label>
+            <label class="role-option">
+              <input type="checkbox" data-user-role="listing_agent">
+              <span class="role-option-copy"><strong>Sell Smart Agent</strong><small>Schedules and manages qualifying Showings and views linked Sell Smart assignment records.</small></span>
+            </label>
+            <label class="role-option">
+              <input type="checkbox" data-user-role="vfp_agent">
+              <span class="role-option-copy"><strong>VFP Agent</strong><small>Views Vehicle Finder transactions and eligible personal commissions.</small></span>
+            </label>
+            <label class="role-option">
+              <input type="checkbox" data-user-role="payroll_team">
+              <span class="role-option-copy"><strong>Payroll Team</strong><small>Prepares contractor payment runs without assignment-management or payroll-approval authority.</small></span>
+            </label>
+          </div>
+        </section>
+
+        <div id="userHourlyRateField" class="user-rate-panel hidden">
+          <div class="field">
+            <label for="userHourlyRate">Default Car Concierge Hourly Rate</label>
+            <div class="money-input"><span aria-hidden="true">$</span><input id="userHourlyRate" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="20.00"></div>
+            <span class="field-help">Required for the Car Concierge role. New assignments receive a rate snapshot so historical pay remains unchanged.</span>
+          </div>
+        </div>
+
+        <section id="userSellSmartCommissionSection" class="user-section hidden" aria-labelledby="sellSmartCommissionHeading">
+          <div class="user-section-header">
+            <div>
+              <h3 id="sellSmartCommissionHeading">Sell Smart Commission Eligibility</h3>
+              <p>Operational Sell Smart access does not automatically make the user commission eligible.</p>
+            </div>
+          </div>
+          <div class="commission-eligibility-grid">
+            <label class="commission-option"><input id="userCommissionSellSmart" type="checkbox" data-commission-program="sell_smart"><span class="commission-option-copy"><strong>Sell Smart</strong><small>Eligible for Sell Smart commissions when a matching rule applies.</small></span></label>
+            <label class="commission-option"><input id="userCommissionCashBuyer" type="checkbox" data-commission-program="cash_buyer"><span class="commission-option-copy"><strong>Cash Buyer</strong><small>Eligible for Cash Buyer commissions when a matching rule applies.</small></span></label>
+          </div>
+        </section>
+
+        <section id="userVfpCommissionSection" class="user-section hidden" aria-labelledby="vfpCommissionHeading">
+          <div class="user-section-header">
+            <div>
+              <h3 id="vfpCommissionHeading">VFP Commission Eligibility</h3>
+              <p>Choose each program in which this VFP Agent may receive commissions.</p>
+            </div>
+          </div>
+          <div class="commission-eligibility-grid">
+            <label class="commission-option"><input id="userCommissionVehicleFinder" type="checkbox" data-commission-program="vehicle_finder"><span class="commission-option-copy"><strong>Vehicle Finder</strong><small>Eligible for Vehicle Finder Program commissions.</small></span></label>
+            <label class="commission-option"><input id="userCommissionVpp" type="checkbox" data-commission-program="vehicle_protection_plan"><span class="commission-option-copy"><strong>Vehicle Protection Plan</strong><small>Eligible for VPP commissions when a matching rule applies.</small></span></label>
+          </div>
+        </section>
+
+        <div class="danger-panel">
+          <strong>Archiving is handled separately</strong>
+          <p>Use Archive User from the Users &amp; Rates page. Archiving blocks sign-in and preserves assignments, payroll, commissions, and audit history.</p>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="button button-light" type="button" data-close-dialog="userDialog">Cancel</button>
+        <button id="saveUserButton" class="button button-purple" type="submit">Send Invitation</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="archiveUserDialog" class="dialog">
+    <form id="archiveUserForm" class="dialog-shell">
+      <div class="dialog-header">
+        <div><h2>Archive Portal User</h2><p id="archiveUserSummary">Archive this user and block portal sign-in.</p></div>
+        <button class="dialog-close" type="button" data-close-dialog="archiveUserDialog" aria-label="Close">×</button>
+      </div>
+      <div class="dialog-body">
+        <input id="archiveUserProfileId" type="hidden">
+        <div id="archiveUserNotice" class="notice hidden"></div>
+        <div class="notice notice-info">The user cannot be archived while unresolved assignments still reference them. Historical records will remain intact.</div>
+        <div class="field"><label for="archiveUserReason">Archive Reason</label><textarea id="archiveUserReason" minlength="5" maxlength="500" required placeholder="Example: Contractor relationship ended on July 18, 2026."></textarea></div>
+      </div>
+      <div class="dialog-footer">
+        <button class="button button-light" type="button" data-close-dialog="archiveUserDialog">Cancel</button>
+        <button id="confirmArchiveUserButton" class="button button-danger" type="submit">Archive User</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="declineDialog" class="dialog">
+    <form id="declineForm" class="dialog-shell">
+      <div class="dialog-header"><div><h2>Decline Assignment</h2><p>The only permitted reason is a prior appointment.</p></div><button class="dialog-close" type="button" data-close-dialog="declineDialog">×</button></div>
+      <div class="dialog-body"><input id="declineAssignmentId" type="hidden"><input id="declineRequestVersion" type="hidden"><div id="declineFormNotice" class="notice hidden"></div><div class="field"><label>Reason</label><input value="Prior appointment" readonly></div><div class="field"><label for="declineExplanation">Explain the prior appointment</label><textarea id="declineExplanation" minlength="10" maxlength="500" required placeholder="Example: I already have an appointment scheduled from 2:00 PM to 4:00 PM."></textarea></div></div>
+      <div class="dialog-footer"><button class="button button-light" type="button" data-close-dialog="declineDialog">Cancel</button><button id="submitDeclineButton" class="button button-danger" type="submit">Decline Assignment</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="reassignDialog" class="dialog">
+    <form id="reassignForm" class="dialog-shell">
+      <div class="dialog-header"><div><h2>Reassign Car Concierge</h2><p>The new Car Concierge will receive a new assignment request email.</p></div><button class="dialog-close" type="button" data-close-dialog="reassignDialog">×</button></div>
+      <div class="dialog-body"><input id="reassignAssignmentId" type="hidden"><div id="reassignFormNotice" class="notice hidden"></div><div class="field"><label for="reassignConcierge">New Car Concierge</label><select id="reassignConcierge" required></select></div></div>
+      <div class="dialog-footer"><button class="button button-light" type="button" data-close-dialog="reassignDialog">Cancel</button><button id="submitReassignButton" class="button button-purple" type="submit">Reassign and Send</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="costDialog" class="dialog"><form id="costForm" class="dialog-shell"><div class="dialog-header"><div><h2>Add Approved Amount</h2><p>This amount is included in calculated assignment pay.</p></div><button class="dialog-close" type="button" data-close-dialog="costDialog">×</button></div><div class="dialog-body"><input id="costAssignmentId" type="hidden"><div id="costFormNotice" class="notice hidden"></div><div class="field"><label for="costDescription">Description</label><input id="costDescription" required></div><div class="field"><label for="costAmount">Amount</label><input id="costAmount" type="number" min=".01" step=".01" required></div><div class="field"><label for="costNotes">Notes</label><textarea id="costNotes"></textarea></div></div><div class="dialog-footer"><button class="button button-light" type="button" data-close-dialog="costDialog">Cancel</button><button id="saveCostButton" class="button button-purple" type="submit">Add Approved Amount</button></div></form></dialog>
+  <dialog id="requestDialog" class="dialog"><form id="requestForm" class="dialog-shell"><div class="dialog-header"><div><h2>Request Additional Amount</h2><p>The Client Services Director must approve it before it counts toward pay.</p></div><button class="dialog-close" type="button" data-close-dialog="requestDialog">×</button></div><div class="dialog-body"><input id="requestAssignmentId" type="hidden"><div id="requestFormNotice" class="notice hidden"></div><div class="field"><label for="requestDescription">Reason</label><input id="requestDescription" required></div><div class="field"><label for="requestAmount">Amount</label><input id="requestAmount" type="number" min=".01" step=".01" required></div><div class="field"><label for="requestNotes">Explanation</label><textarea id="requestNotes"></textarea></div></div><div class="dialog-footer"><button class="button button-light" type="button" data-close-dialog="requestDialog">Cancel</button><button id="submitRequestButton" class="button button-purple" type="submit">Submit Request</button></div></form></dialog>
+  <dialog id="reviewDialog" class="dialog"><form id="reviewForm" class="dialog-shell"><div class="dialog-header"><div><h2 id="reviewDialogTitle">Review Request</h2><p id="reviewDialogSummary"></p></div><button class="dialog-close" type="button" data-close-dialog="reviewDialog">×</button></div><div class="dialog-body"><input id="reviewCostId" type="hidden"><input id="reviewDecision" type="hidden"><div id="reviewFormNotice" class="notice hidden"></div><div class="field"><label for="reviewNotes">Decision Notes</label><textarea id="reviewNotes"></textarea></div></div><div class="dialog-footer"><button class="button button-light" type="button" data-close-dialog="reviewDialog">Cancel</button><button id="submitReviewButton" class="button button-purple" type="submit">Submit Decision</button></div></form></dialog>
+  <dialog id="ratingsDialog" class="dialog"><form id="ratingsForm" class="dialog-shell"><div class="dialog-header"><div><h2>Vehicle Condition Ratings</h2><p>Notes are required for any rating of 5 or below.</p></div><button class="dialog-close" type="button" data-close-dialog="ratingsDialog">×</button></div><div class="dialog-body"><input id="ratingsAssignmentId" type="hidden"><div id="ratingsFormNotice" class="notice hidden"></div><div id="ratingsFields" class="form-grid"></div></div><div class="dialog-footer"><button class="button button-light" type="button" data-close-dialog="ratingsDialog">Cancel</button><button id="saveRatingsButton" class="button button-purple" type="submit">Save Ratings</button></div></form></dialog>
+  <dialog id="mailDialog" class="dialog"><form id="mailForm" class="dialog-shell"><div class="dialog-header"><div><h2>Mailing Check Details</h2><p>Carrier and tracking number are required before ending.</p></div><button class="dialog-close" type="button" data-close-dialog="mailDialog">×</button></div><div class="dialog-body"><input id="mailAssignmentId" type="hidden"><div id="mailFormNotice" class="notice hidden"></div><div class="field"><label for="mailCarrier">Carrier</label><select id="mailCarrier" required><option value="">Select</option><option>USPS</option><option>UPS</option><option>FedEx</option><option>Other</option></select></div><div class="field"><label for="mailTrackingNumber">Tracking Number</label><input id="mailTrackingNumber" required></div><label class="checkbox-row"><input id="mailConfirm" type="checkbox" required><span>I confirm the check was mailed.</span></label></div><div class="dialog-footer"><button class="button button-light" type="button" data-close-dialog="mailDialog">Cancel</button><button id="saveMailButton" class="button button-purple" type="submit">Save Mailing Details</button></div></form></dialog>
+
+  <script>
+    "use strict";
+    const SUPABASE_URL="https://imduotnykmzahmfxmxtt.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY="sb_publishable_t4zEegaoid7zVki8TQr1LQ_o-itQGfM";
+    const CENTRAL_TIME_ZONE="America/Chicago";
+    const LIABILITY_FORM_URL="https://www.iautoagent.com/assumption-of-liability-form";
+    const PORTAL_URL="https://portal.iautoagent.com/";
+    const PASSWORD_SETUP_REQUESTED=/[?#&]type=(invite|recovery)/i.test(window.location.href);
+    const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+
+    const state={user:null,profile:null,roles:new Set(),activeView:"assignments",userStatusFilter:"active",profiles:new Map(),profileRolesByProfile:new Map(),commissionEligibilityByProfile:new Map(),assignmentTypes:new Map(),assignments:[],openAssignmentPool:[],appointmentsByAssignment:new Map(),listingAgents:new Map(),showingDetails:new Map(),closingDetails:new Map(),paySummaries:new Map(),completions:new Map(),costsByAssignment:new Map(),locationsByAssignment:new Map(),responseHistoryByAssignment:new Map(),notificationsByAssignment:new Map(),commissionItems:[],commissionCompanySummary:[],commissionRecipientSummary:[],commissionCompanyDetail:[],commissionError:null,directorProfile:null};
+    const $=id=>document.getElementById(id);
+    const E={loginPage:$("loginPage"),portalPage:$("portalPage"),loginForm:$("loginForm"),loginButton:$("loginButton"),loginNotice:$("loginNotice"),portalNotice:$("portalNotice"),portalContent:$("portalContent"),sidebar:$("sidebar"),userName:$("userName"),userRole:$("userRole"),signOutButton:$("signOutButton"),assignmentDialog:$("assignmentDialog"),assignmentForm:$("assignmentForm"),assignmentDialogTitle:$("assignmentDialogTitle"),assignmentId:$("assignmentId"),assignmentExistingStatus:$("assignmentExistingStatus"),assignmentFormNotice:$("assignmentFormNotice"),assignmentType:$("assignmentType"),assignmentConcierge:$("assignmentConcierge"),assignmentRatePreview:$("assignmentRatePreview"),assignmentListingAgent:$("assignmentListingAgent"),listingAgentField:$("listingAgentField"),assignmentVehicle:$("assignmentVehicle"),assignmentTitle:$("assignmentTitle"),assignmentOrganizer:$("assignmentOrganizer"),organizerField:$("organizerField"),assignmentDescription:$("assignmentDescription"),assignmentDynamicFields:$("assignmentDynamicFields"),generateTitlesButton:$("generateTitlesButton"),saveDraftButton:$("saveDraftButton"),sendAcceptanceButton:$("sendAcceptanceButton"),archiveAssignmentDialog:$("archiveAssignmentDialog"),archiveAssignmentForm:$("archiveAssignmentForm"),archiveAssignmentId:$("archiveAssignmentId"),archiveAssignmentSummary:$("archiveAssignmentSummary"),archiveAssignmentReason:$("archiveAssignmentReason"),archiveAssignmentNotice:$("archiveAssignmentNotice"),confirmArchiveAssignmentButton:$("confirmArchiveAssignmentButton"),listingAgentDialog:$("listingAgentDialog"),listingAgentForm:$("listingAgentForm"),listingAgentDialogTitle:$("listingAgentDialogTitle"),listingAgentId:$("listingAgentId"),listingAgentFormNotice:$("listingAgentFormNotice"),listingAgentName:$("listingAgentName"),listingAgentPhone:$("listingAgentPhone"),listingAgentEmail:$("listingAgentEmail"),listingAgentProfile:$("listingAgentProfile"),listingAgentCalendar:$("listingAgentCalendar"),listingAgentCanOrganize:$("listingAgentCanOrganize"),listingAgentActive:$("listingAgentActive"),saveListingAgentButton:$("saveListingAgentButton"),passwordSetupDialog:$("passwordSetupDialog"),passwordSetupForm:$("passwordSetupForm"),passwordSetupNotice:$("passwordSetupNotice"),newPortalPassword:$("newPortalPassword"),confirmPortalPassword:$("confirmPortalPassword"),savePortalPasswordButton:$("savePortalPasswordButton"),userDialog:$("userDialog"),userForm:$("userForm"),userDialogTitle:$("userDialogTitle"),userProfileId:$("userProfileId"),userFormNotice:$("userFormNotice"),userFullName:$("userFullName"),userEmail:$("userEmail"),userHourlyRateField:$("userHourlyRateField"),userHourlyRate:$("userHourlyRate"),userSellSmartCommissionSection:$("userSellSmartCommissionSection"),userVfpCommissionSection:$("userVfpCommissionSection"),userCommissionSellSmart:$("userCommissionSellSmart"),userCommissionCashBuyer:$("userCommissionCashBuyer"),userCommissionVehicleFinder:$("userCommissionVehicleFinder"),userCommissionVpp:$("userCommissionVpp"),saveUserButton:$("saveUserButton"),archiveUserDialog:$("archiveUserDialog"),archiveUserForm:$("archiveUserForm"),archiveUserProfileId:$("archiveUserProfileId"),archiveUserSummary:$("archiveUserSummary"),archiveUserReason:$("archiveUserReason"),archiveUserNotice:$("archiveUserNotice"),confirmArchiveUserButton:$("confirmArchiveUserButton"),declineDialog:$("declineDialog"),declineForm:$("declineForm"),declineAssignmentId:$("declineAssignmentId"),declineRequestVersion:$("declineRequestVersion"),declineExplanation:$("declineExplanation"),declineFormNotice:$("declineFormNotice"),submitDeclineButton:$("submitDeclineButton"),reassignDialog:$("reassignDialog"),reassignForm:$("reassignForm"),reassignAssignmentId:$("reassignAssignmentId"),reassignConcierge:$("reassignConcierge"),reassignFormNotice:$("reassignFormNotice"),submitReassignButton:$("submitReassignButton"),costDialog:$("costDialog"),costForm:$("costForm"),costAssignmentId:$("costAssignmentId"),costDescription:$("costDescription"),costAmount:$("costAmount"),costNotes:$("costNotes"),costFormNotice:$("costFormNotice"),saveCostButton:$("saveCostButton"),requestDialog:$("requestDialog"),requestForm:$("requestForm"),requestAssignmentId:$("requestAssignmentId"),requestDescription:$("requestDescription"),requestAmount:$("requestAmount"),requestNotes:$("requestNotes"),requestFormNotice:$("requestFormNotice"),submitRequestButton:$("submitRequestButton"),reviewDialog:$("reviewDialog"),reviewForm:$("reviewForm"),reviewDialogTitle:$("reviewDialogTitle"),reviewDialogSummary:$("reviewDialogSummary"),reviewCostId:$("reviewCostId"),reviewDecision:$("reviewDecision"),reviewNotes:$("reviewNotes"),reviewFormNotice:$("reviewFormNotice"),submitReviewButton:$("submitReviewButton"),ratingsDialog:$("ratingsDialog"),ratingsForm:$("ratingsForm"),ratingsAssignmentId:$("ratingsAssignmentId"),ratingsFields:$("ratingsFields"),ratingsFormNotice:$("ratingsFormNotice"),saveRatingsButton:$("saveRatingsButton"),mailDialog:$("mailDialog"),mailForm:$("mailForm"),mailAssignmentId:$("mailAssignmentId"),mailCarrier:$("mailCarrier"),mailTrackingNumber:$("mailTrackingNumber"),mailConfirm:$("mailConfirm"),mailFormNotice:$("mailFormNotice"),saveMailButton:$("saveMailButton")};
+
+    function setNotice(el,msg,type="error"){if(!msg){el.textContent="";el.className="notice hidden";return}el.textContent=msg;el.className=`notice notice-${type}`}
+    function setLoading(btn,on,loading,normal){btn.disabled=on;btn.textContent=on?loading:normal}
+    function openDialog(d){if(!d.open)d.showModal()} function closeDialog(d){if(d.open)d.close()}
+    function escapeHtml(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+    function linkify(v){return escapeHtml(v).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')}
+    function titleCase(v){return String(v??"").replaceAll("_"," ").replace(/\b\w/g,c=>c.toUpperCase())}
+    function formatMoney(v){const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(n):"—"}
+    function formatHours(v){const n=Number(v);return Number.isFinite(n)?`${n.toFixed(2)} hours`:"—"}
+    function formatCentralDateTime(v){if(!v)return "Not scheduled";const d=new Date(v);if(Number.isNaN(d.getTime()))return "Invalid date";return new Intl.DateTimeFormat("en-US",{timeZone:CENTRAL_TIME_ZONE,weekday:"short",month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"}).format(d)}
+    function formatCentralDateInput(v){if(!v)return"";const p=Object.fromEntries(new Intl.DateTimeFormat("en-CA",{timeZone:CENTRAL_TIME_ZONE,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date(v)).map(x=>[x.type,x.value]));return`${p.year}-${p.month}-${p.day}`}
+    function formatCentralTimeInput(v){if(!v)return"";const p=Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:CENTRAL_TIME_ZONE,hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(v)).map(x=>[x.type,x.value]));return`${p.hour}:${p.minute}`}
+    function getCentralDateString(){const p=Object.fromEntries(new Intl.DateTimeFormat("en-CA",{timeZone:CENTRAL_TIME_ZONE,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()).map(x=>[x.type,x.value]));return`${p.year}-${p.month}-${p.day}`}
+    function tzOffsetMs(date,timeZone){const p=Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(date).map(x=>[x.type,x.value]));return Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute,+p.second)-date.getTime()}
+    function centralWallToIso(dateValue,timeValue){const[y,m,d]=String(dateValue).split("-").map(Number),[h,min]=String(timeValue).split(":").map(Number);if(![y,m,d,h,min].every(Number.isFinite))throw new Error("Enter a valid date and time.");const wall=Date.UTC(y,m-1,d,h,min,0);let result=wall;for(let i=0;i<3;i++){const adjusted=wall-tzOffsetMs(new Date(result),CENTRAL_TIME_ZONE);if(adjusted===result)break;result=adjusted}return new Date(result).toISOString()}
+    function groupBy(items,key){const map=new Map();for(const item of items){const k=key(item),arr=map.get(k)||[];arr.push(item);map.set(k,arr)}return map}
+    function statusBadge(status){const s=String(status||"unknown").toLowerCase();let c="badge-purple";if(["accepted","completed","approved","paid","released","synced","sent"].includes(s))c="badge-green";else if(["pending_acceptance","in_progress","pending","processing","pending_create","pending_update"].includes(s))c="badge-yellow";else if(["declined_reassignment_required","cancelled","error","partial_error","denied","archived"].includes(s))c="badge-red";else if(["assigned"].includes(s))c="badge-blue";return`<span class="badge ${c}">${escapeHtml(statusLabel(s))}</span>`}
+    function statusLabel(s){const labels={pending_acceptance:"Pending Acceptance",declined_reassignment_required:"Declined · Reassignment Required",in_progress:"In Progress",not_released:"Not Released",partial_error:"Partial Error",pending_create:"Pending Create",pending_update:"Update Needed",not_scheduled:"Not Scheduled"};return labels[s]||titleCase(s)}
+    function detail(label,value){return`<div class="detail"><span class="detail-label">${escapeHtml(label)}</span><span class="detail-value">${escapeHtml(value??"—")}</span></div>`}
+    function summaryCard(label,value){return`<section class="summary-card"><div class="summary-label">${escapeHtml(label)}</div><div class="summary-value">${escapeHtml(value)}</div></section>`}
+    function normalizeRoleCode(role) {
+      const value = String(role || "").trim().toLowerCase();
+
+      if (value === "admin") {
+        return "client_services_director";
+      }
+
+      if (value === "payroll") {
+        return "payroll_team";
+      }
+
+      return value;
+    }
+
+    function roleLabel(role) {
+      const normalizedRole = normalizeRoleCode(role);
+
+      const labels = {
+        client_services_director: "Client Services Director",
+        ceo: "CEO",
+        payroll_team: "Payroll Team",
+        car_concierge: "Car Concierge",
+        listing_agent: "Sell Smart Agent",
+        vfp_agent: "VFP Agent"
+      };
+
+      return labels[normalizedRole] || titleCase(normalizedRole);
+    }
+
+    function hasRole(role) {
+      return state.roles.has(normalizeRoleCode(role));
+    }
+
+    function isManager() {
+      return hasRole("client_services_director");
+    }
+
+    function isCEO() {
+      return hasRole("ceo");
+    }
+
+    function isPayrollTeam() {
+      return hasRole("payroll_team");
+    }
+
+    function isConcierge() {
+      return hasRole("car_concierge");
+    }
+
+    function isListingAgent() {
+      return hasRole("listing_agent");
+    }
+
+    function isAgent() {
+      return hasRole("listing_agent") || hasRole("vfp_agent");
+    }
+
+    function profileName(id) {
+      const profile = state.profiles.get(id);
+      return profile?.full_name || profile?.email || "Unknown";
+    }
+
+    function rolesForProfile(id) {
+      const profile = state.profiles.get(id);
+
+      const activeStoredRoles = (
+        state.profileRolesByProfile.get(id) || []
+      )
+        .filter(role => role.active !== false)
+        .map(role => normalizeRoleCode(role.role_code))
+        .filter(Boolean);
+
+      const roles = new Set(activeStoredRoles);
+
+      /*
+       * Active profile_roles rows are authoritative.
+       * profiles.role is used only when no active stored role exists.
+       */
+      if (
+        activeStoredRoles.length === 0 &&
+        profile?.role &&
+        profile.role !== "pending"
+      ) {
+        const legacyRole = normalizeRoleCode(profile.role);
+
+        if (legacyRole) {
+          roles.add(legacyRole);
+        }
+      }
+
+      return [...roles];
+    }
+
+    function profileHasRole(id, role) {
+      return rolesForProfile(id).includes(
+        normalizeRoleCode(role)
+      );
+    }
+        function listingAgentForAssignment(a){return state.listingAgents.get(a.listing_agent_id)||null}
+    function appointmentsFor(id){return state.appointmentsByAssignment.get(id)||[]}
+    function costsFor(id){return state.costsByAssignment.get(id)||[]}
+    function completionFor(id){return state.completions.get(id)||null}
+    function locationFor(id,type){return(state.locationsByAssignment.get(id)||[]).find(x=>x.location_event===type)||null}
+    function mapLink(loc){return loc?`https://www.google.com/maps?q=${encodeURIComponent(`${loc.latitude},${loc.longitude}`)}`:""}
+    function showLogin(){E.portalPage.classList.add("hidden");E.loginPage.classList.remove("hidden")} function showPortal(){E.loginPage.classList.add("hidden");E.portalPage.classList.remove("hidden")}
+    async function safeData(promise,fallback,label){try{const{data,error}=await promise;if(error)throw error;return data??fallback}catch(err){console.warn(label,err.message);return fallback}}
+
+    async function getProfile(id){const{data,error}=await supabaseClient.from("profiles").select("id,email,full_name,role,sales_category,active,archived_at,archive_reason,default_hourly_rate").eq("id",id).single();if(error)throw error;return data}
+    async function loadPortal() {
+      showPortal();
+      setNotice(E.portalNotice, "");
+
+      E.portalContent.className = "loading";
+      E.portalContent.innerHTML =
+        '<div><div class="spinner"></div>Loading portal…</div>';
+
+      const {
+        data: userData,
+        error: userError
+      } = await supabaseClient.auth.getUser();
+
+      if (userError) {
+        throw userError;
+      }
+
+      if (!userData.user) {
+        showLogin();
+        return;
+      }
+
+      state.user = userData.user;
+      state.profile = await getProfile(userData.user.id);
+
+      if (!state.profile.active || state.profile.archived_at) {
+        throw new Error("This portal account is inactive or archived.");
+      }
+
+      const roleRows = await safeData(
+        supabaseClient
+          .from("profile_roles")
+          .select("role_code,active")
+          .eq("profile_id", state.profile.id)
+          .eq("active", true),
+        [],
+        "Role load"
+      );
+
+      const activeStoredRoles = roleRows
+        .filter(role => role.active !== false)
+        .map(role => normalizeRoleCode(role.role_code))
+        .filter(Boolean);
+
+      state.roles = new Set(activeStoredRoles);
+
+      /*
+       * The legacy profiles.role value is fallback only.
+       * It cannot restore a role that was deactivated in profile_roles.
+       */
+      if (
+        activeStoredRoles.length === 0 &&
+        state.profile.role &&
+        state.profile.role !== "pending"
+      ) {
+        const legacyRole = normalizeRoleCode(
+          state.profile.role
+        );
+
+        if (legacyRole) {
+          state.roles.add(legacyRole);
+        }
+      }
+
+      E.userName.textContent =
+        state.profile.full_name || state.profile.email;
+
+      E.userRole.textContent =
+        [...state.roles]
+          .map(roleLabel)
+          .join(" · ") || "Portal User";
+
+      await loadData();
+      renderNavigation();
+      renderView();
+    }
+        async function loadData(){
+      const assignmentsQ=supabaseClient.from("car_concierge_assignments").select(`id,assignment_number,concierge_id,assignment_type_code,title,description,client_name,client_email,client_invite_notes,vehicle,assignment_date,hourly_rate,status,started_at,ended_at,scheduled_start_at,scheduled_end_at,location,listing_agent_id,scheduled_by_profile_id,client_services_director_profile_id,request_version,acceptance_requested_at,accepted_at,declined_at,decline_reason_code,decline_explanation,invitation_release_status,invitation_release_error,invitations_released_at,created_by,is_deleted,deleted_at,deleted_by_profile_id,deletion_reason`).eq("is_deleted",false).order("assignment_number",{ascending:false});
+      const typesQ=supabaseClient.from("car_concierge_assignment_types").select("code,display_name,sort_order").order("sort_order",{ascending:true});
+      const profilesQ=supabaseClient.from("profiles").select("id,email,full_name,role,active,archived_at,archive_reason,default_hourly_rate").order("full_name",{ascending:true});
+      const profileRolesQ=supabaseClient.from("profile_roles").select("profile_id,role_code,active");
+      const commissionEligibilityQ=supabaseClient.from("profile_commission_eligibility").select("profile_id,program_code,agent_category,eligible,notes");
+      const apptsQ=supabaseClient.from("car_concierge_assignment_appointments").select("*").order("sequence_number",{ascending:true});
+      const listingQ=supabaseClient.from("car_concierge_listing_agents").select("*").order("full_name",{ascending:true});
+      const showQ=supabaseClient.from("car_concierge_showing_details").select("*");
+      const closeQ=supabaseClient.from("car_concierge_closing_details").select("*");
+      const payQ=supabaseClient.from("assignment_pay_summary").select("*");
+      const completionQ=supabaseClient.from("car_concierge_assignment_completion").select("*");
+      const costsQ=supabaseClient.from("car_concierge_costs").select("*").order("submitted_at",{ascending:false});
+      const historyQ=supabaseClient.from("car_concierge_assignment_response_history").select("*").order("responded_at",{ascending:false});
+      const notificationsQ=supabaseClient.from("contractor_notification_outbox").select("*").order("created_at",{ascending:false});
+      const directoryQ=supabaseClient.rpc("get_assignment_people_directory");
+      const openPoolQ=isConcierge()
+        ? supabaseClient.rpc("get_open_car_concierge_assignment_pool")
+        : Promise.resolve({data:[],error:null});
+      const results=await Promise.all([safeData(assignmentsQ,[],"Assignments"),safeData(typesQ,[],"Types"),safeData(profilesQ,[],"Profiles"),safeData(profileRolesQ,[],"Profile roles"),safeData(commissionEligibilityQ,[],"Commission eligibility"),safeData(directoryQ,[],"Assignment people directory"),safeData(apptsQ,[],"Appointments"),safeData(listingQ,[],"Sell Smart agents"),safeData(showQ,[],"Showing details"),safeData(closeQ,[],"Closing details"),safeData(payQ,[],"Pay summary"),safeData(completionQ,[],"Completion"),safeData(costsQ,[],"Costs"),safeData(historyQ,[],"Response history"),safeData(notificationsQ,[],"Notifications"),safeData(openPoolQ,[],"Open assignment pool")]);
+      const[a,t,p,pr,eligibility,directory,ap,l,s,c,pay,comp,cost,hist,notif,openPool]=results;state.assignments=a;state.openAssignmentPool=openPool;state.assignmentTypes=new Map(t.map(x=>[x.code,x.display_name]));state.profiles=new Map(p.map(x=>[x.id,x]));directory.forEach(x=>{const existing=state.profiles.get(x.id)||{};state.profiles.set(x.id,{...x,...existing,role:existing.role||x.role_code})});state.profileRolesByProfile=groupBy(pr,x=>x.profile_id);state.commissionEligibilityByProfile=groupBy(eligibility,x=>x.profile_id);state.appointmentsByAssignment=groupBy(ap,x=>x.assignment_id);state.listingAgents=new Map(l.map(x=>[x.id,x]));state.showingDetails=new Map(s.map(x=>[x.assignment_id,x]));state.closingDetails=new Map(c.map(x=>[x.assignment_id,x]));state.paySummaries=new Map(pay.map(x=>[x.id||x.assignment_id,x]));state.completions=new Map(comp.map(x=>[x.assignment_id,x]));state.costsByAssignment=groupBy(cost,x=>x.assignment_id);state.responseHistoryByAssignment=groupBy(hist,x=>x.assignment_id);state.notificationsByAssignment=groupBy(notif,x=>x.assignment_id);state.directorProfile=[...state.profiles.values()].find(x=>String(x.email).toLowerCase()==="brie@iautoagent.com")||[...state.profiles.values()].find(x=>profileHasRole(x.id,"client_services_director"))||null;
+      state.locationsByAssignment=new Map();if(isManager()){const loc=await safeData(supabaseClient.from("car_concierge_assignment_locations").select("*").order("captured_at",{ascending:true}),[],"Locations");state.locationsByAssignment=groupBy(loc,x=>x.assignment_id)}
+      state.commissionItems=[];state.commissionCompanySummary=[];state.commissionRecipientSummary=[];state.commissionCompanyDetail=[];state.commissionError=null;
+      try{
+        const{data,error}=await supabaseClient.from("commission_items").select("*").order("created_at",{ascending:false});
+        if(error)throw error;
+        state.commissionItems=data||[];
+        if(isManager()||isCEO()){
+          const[company,recipient,detailRows]=await Promise.all([
+            safeData(supabaseClient.from("commission_company_summary").select("*").order("period_start",{ascending:false}),[],"Commission company summary"),
+            safeData(supabaseClient.from("commission_recipient_summary").select("*").order("period_start",{ascending:false}),[],"Commission recipient summary"),
+            safeData(supabaseClient.from("commission_company_detail").select("*").order("transaction_date",{ascending:false}),[],"Commission company detail")
+          ]);
+          state.commissionCompanySummary=company;
+          state.commissionRecipientSummary=recipient;
+          state.commissionCompanyDetail=detailRows;
+        }
+      }catch(err){state.commissionError=err.message}
+    }
+
+    function renderNavigation(){
+      const items=[
+        {id:"assignments",label:"Assignments",show:true},
+        {id:"users",label:"Users & Rates",show:isManager()},
+        {id:"listing-agents",label:"Sell Smart Agent Directory",show:isManager()},
+        {id:"commissions",label:"Commissions",show:isAgent()||isManager()||isCEO()},
+        {id:"payments",label:"Contractor Payments · Next",show:isManager()||isCEO()||isPayrollTeam(),disabled:true}
+      ];
+
+      E.sidebar.innerHTML=items
+        .filter(item=>item.show)
+        .map(item=>`
+          <button
+            class="nav-button ${state.activeView===item.id?"active":""}"
+            type="button"
+            data-nav="${item.id}"
+            ${item.disabled?"disabled":""}
+          >
+            ${escapeHtml(item.label)}
+          </button>
+        `)
+        .join("");
+    }
+    function renderView(){renderNavigation();if(state.activeView==="users")return renderUsers();if(state.activeView==="listing-agents")return renderDirectory();if(state.activeView==="commissions")return renderCommissions();return renderAssignments()}
+
+    function visibleAssignments(){return state.assignments}
+    function renderAssignments() {
+      const items = visibleAssignments();
+
+      /*
+       * Role priority matters for users with more than one role.
+       *
+       * Client Services Directors keep the scheduler dashboard because
+       * they manage assignments. Every other user with the Car Concierge
+       * role must receive the concierge dashboard so assigned work can be
+       * accepted, declined, started, and completed.
+       *
+       * This fixes CEO + Car Concierge users being routed to the read-only
+       * scheduler dashboard, which hid the Accept and Decline buttons.
+       */
+      if (isManager()) {
+        renderSchedulerDashboard(items);
+      } else if (isConcierge()) {
+        renderConciergeDashboard(items);
+      } else if (
+        isCEO() ||
+        isPayrollTeam() ||
+        isListingAgent()
+      ) {
+        renderSchedulerDashboard(items);
+      } else {
+        E.portalContent.innerHTML =
+          '<div class="empty-card">No assignment role is assigned to this account.</div>';
+      }
+
+      E.portalContent.className = "";
+    }
+        function renderSchedulerDashboard(items) {
+      const drafts = items.filter(
+        assignment => assignment.status === "draft"
+      ).length;
+
+      const pending = items.filter(
+        assignment =>
+          assignment.status === "pending_acceptance"
+      ).length;
+
+      const active = items.filter(
+        assignment =>
+          ["accepted", "in_progress"].includes(
+            assignment.status
+          )
+      ).length;
+
+      const attention = items.filter(
+        assignment =>
+          assignment.status ===
+            "declined_reassignment_required" ||
+          ["error", "partial_error"].includes(
+            assignment.invitation_release_status
+          )
+      ).length;
+
+      const canCreate =
+        isManager() || isListingAgent();
+
+      const dashboardLabel = isManager()
+        ? "Client Services Director"
+        : isCEO()
+          ? "CEO"
+          : isPayrollTeam()
+            ? "Payroll Team"
+            : "Sell Smart Agent";
+
+      E.portalContent.innerHTML = `
+        <div class="hero">
+          <div>
+            <p class="eyebrow">
+              ${escapeHtml(dashboardLabel)} Dashboard
+            </p>
+
+            <h1>Assignments</h1>
+
+            <p>
+              Review assignment details and complete only the actions
+              permitted for your portal role.
+            </p>
+          </div>
+
+          <div class="hero-actions">
+            ${
+              canCreate
+                ? `
+                  <button
+                    class="button button-purple"
+                    data-action="create-assignment"
+                  >
+                    Create Assignment
+                  </button>
+                `
+                : ""
+            }
+
+            <button
+              class="button button-light"
+              data-action="refresh"
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="summary-grid">
+          ${summaryCard("Drafts", drafts)}
+          ${summaryCard("Pending Acceptance", pending)}
+          ${summaryCard("Active", active)}
+          ${summaryCard("Needs Attention", attention)}
+        </div>
+
+        <div class="section-heading">
+          <h2>Assignment Records</h2>
+          <span>${items.length} total</span>
+        </div>
+
+        <div class="assignment-list">
+          ${
+            items.length
+              ? items.map(renderSchedulerCard).join("")
+              : `
+                <div class="empty-card">
+                  No assignments are available.
+                </div>
+              `
+          }
+        </div>
+      `;
+    }
+    function renderConciergeDashboard(items) {
+      const pending = items.filter(
+        assignment => assignment.status === "pending_acceptance"
+      ).length;
+
+      const current = items.filter(
+        assignment =>
+          ["accepted", "in_progress"].includes(
+            assignment.status
+          )
+      ).length;
+
+      const completed = items.filter(
+        assignment =>
+          ["completed", "approved", "paid"].includes(
+            assignment.status
+          )
+      ).length;
+
+      const poolItems = state.openAssignmentPool || [];
+
+      E.portalContent.innerHTML = `
+        <div class="hero">
+          <div>
+            <p class="eyebrow">Car Concierge Dashboard</p>
+            <h1>Your Assignments</h1>
+            <p>
+              Accept assigned work or claim an available assignment
+              from the open pool. Location is captured only when you
+              start and end an assignment.
+            </p>
+          </div>
+
+          <div class="hero-actions">
+            <button
+              class="button button-light"
+              data-action="refresh"
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="summary-grid">
+          ${summaryCard("Open Pool", poolItems.length)}
+          ${summaryCard("Awaiting Response", pending)}
+          ${summaryCard("Current", current)}
+          ${summaryCard("Completed", completed)}
+        </div>
+
+        <div class="section-heading">
+          <h2>Open Assignment Pool</h2>
+          <span>${poolItems.length} available</span>
+        </div>
+
+        <div class="subtle-panel">
+          Open-pool cards show assignment type, vehicle, general area,
+          and schedule. Exact addresses, client names, contact
+          information, notes, calendar details, and hourly rates
+          remain private until a valid claim succeeds.
+        </div>
+
+        <div class="assignment-list">
+          ${
+            poolItems.length
+              ? poolItems.map(renderOpenPoolCard).join("")
+              : `
+                <div class="empty-card">
+                  No assignments are currently available in the open pool.
+                </div>
+              `
+          }
+        </div>
+
+        <div class="section-heading">
+          <h2>Your Assignment Records</h2>
+          <span>${items.length} total</span>
+        </div>
+
+        <div class="assignment-list">
+          ${
+            items.length
+              ? items.map(renderConciergeCard).join("")
+              : `
+                <div class="empty-card">
+                  You do not have any assignments.
+                </div>
+              `
+          }
+        </div>
+      `;
+    }
+
+    function renderOpenPoolCard(assignment) {
+      const schedule = assignment.scheduled_start_at
+        ? formatCentralDateTime(
+            assignment.scheduled_start_at
+          )
+        : assignment.assignment_date
+          ? assignment.assignment_date
+          : "Schedule not available";
+
+      const endSchedule = assignment.scheduled_end_at
+        ? formatCentralDateTime(
+            assignment.scheduled_end_at
+          )
+        : null;
+
+      return `
+        <article class="assignment-card">
+          <div class="assignment-top">
+            <div>
+              <p class="assignment-number">
+                Assignment #${escapeHtml(
+                  assignment.assignment_number
+                )}
+              </p>
+
+              <h3>
+                ${escapeHtml(
+                  assignment.assignment_type_name ||
+                    state.assignmentTypes.get(
+                      assignment.assignment_type_code
+                    ) ||
+                    assignment.assignment_type_code ||
+                    "Assignment"
+                )}
+              </h3>
+
+              <p class="assignment-sub">
+                ${escapeHtml(
+                  assignment.vehicle ||
+                    "No vehicle entered"
+                )}
+              </p>
+            </div>
+
+            <span class="badge badge-blue">
+              Open Pool
+            </span>
+          </div>
+
+          <div class="detail-grid detail-grid-four">
+            ${detail(
+              "General Area",
+              assignment.general_area || "Area not available"
+            )}
+            ${detail("Starts", schedule)}
+            ${detail("Ends", endSchedule || "Not available")}
+            ${detail(
+              "Available Since",
+              formatCentralDateTime(assignment.opened_at)
+            )}
+          </div>
+
+          <div class="requirements-panel">
+            <span class="panel-title">Immediate Acceptance</span>
+            Grabbing this assignment immediately assigns it to you,
+            accepts it, and uses your current default hourly rate.
+            The first valid claim wins.
+          </div>
+
+          <div class="card-actions">
+            <button
+              class="button button-green"
+              data-action="claim-open-assignment"
+              data-id="${assignment.assignment_id}"
+              data-version="${assignment.request_version}"
+            >
+              Grab Assignment
+            </button>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderAppointments(a,internal=true){const appts=appointmentsFor(a.id);if(!appts.length)return'<div class="inline-error">Appointment records have not been created.</div>';return`<div class="appointment-list">${appts.map(ap=>{const syncClient=ap.client_calendar_sync_status||"not_scheduled",syncConcierge=ap.concierge_calendar_sync_status||"not_scheduled";return`<section class="appointment-card"><div class="appointment-head"><div><h4>${escapeHtml(appointmentLabel(ap.appointment_type))}</h4><div class="appointment-meta">${escapeHtml(formatCentralDateTime(ap.scheduled_start_at))} to ${escapeHtml(formatCentralDateTime(ap.scheduled_end_at))}<br>${escapeHtml(ap.location||"Location not entered")}</div></div><div>${statusBadge(syncClient)} ${statusBadge(syncConcierge)}</div></div><div class="appointment-contact"><strong>${escapeHtml(contactRoleLabel(ap.contact_role))}:</strong> ${escapeHtml(ap.contact_name||"—")}${ap.contact_company?` · ${escapeHtml(ap.contact_company)}`:""}<br><strong>Phone:</strong> ${escapeHtml(ap.contact_phone||"—")}<br><strong>Email:</strong> ${escapeHtml(ap.contact_email||"—")}${internal&&ap.client_event_title?`<br><strong>Client title:</strong> ${escapeHtml(ap.client_event_title)}`:""}</div>${internal&&ap.concierge_event_notes?`<div class="instructions"><span class="panel-title">Internal Appointment Notes</span>${linkify(ap.concierge_event_notes)}</div>`:""}${renderAppointmentRetryButtons(a,ap)}</section>`}).join("")}</div>`}
+    function renderAppointmentRetryButtons(
+      assignment,
+      appointment
+    ) {
+      if (
+        !canRetryAssignmentInvitations(assignment)
+      ) {
+        return "";
+      }
+
+      if (
+        ![
+          "accepted",
+          "in_progress",
+          "completed"
+        ].includes(assignment.status)
+      ) {
+        return "";
+      }
+
+      const buttons = [];
+
+      if (
+        [
+          "error",
+          "pending_update",
+          "not_scheduled",
+          "pending_create"
+        ].includes(
+          appointment.client_calendar_sync_status
+        )
+      ) {
+        buttons.push(`
+          <button
+            class="button button-light button-small"
+            data-action="retry-appointment"
+            data-id="${appointment.id}"
+            data-invite-type="client"
+          >
+            Retry Client Event
+          </button>
+        `);
+      }
+
+      if (
+        [
+          "error",
+          "pending_update",
+          "not_scheduled",
+          "pending_create"
+        ].includes(
+          appointment.concierge_calendar_sync_status
+        )
+      ) {
+        buttons.push(`
+          <button
+            class="button button-light button-small"
+            data-action="retry-appointment"
+            data-id="${appointment.id}"
+            data-invite-type="concierge"
+          >
+            Retry Car Concierge Event
+          </button>
+        `);
+      }
+
+      return buttons.length
+        ? `<div class="card-actions">${buttons.join("")}</div>`
+        : "";
+    }
+        function appointmentLabel(t){return({pickup:"Pick Up",showing:"Showing",dropoff:"Drop Off",photos_video:"Photos & Video",mail:"Mailing Checks",miscellaneous:"Miscellaneous Tasks"})[t]||titleCase(t)}
+    function contactRoleLabel(r){return({seller:"Seller",lead:"Lead",buyer:"Buyer",dealer_poc:"Dealer or Company POC",client:"Client Contact"})[r]||titleCase(r)}
+
+    function renderSchedulerCard(assignment) {
+      const concierge = profileName(
+        assignment.concierge_id
+      );
+
+      const listingAgent =
+        listingAgentForAssignment(assignment);
+
+      const pay =
+        state.paySummaries.get(assignment.id) || {};
+
+      const costs = costsFor(assignment.id);
+
+      const pendingCostCount = costs.filter(
+        cost =>
+          cost.request_source === "contractor_request" &&
+          cost.status === "pending"
+      ).length;
+
+      const startLocation = locationFor(
+        assignment.id,
+        "start"
+      );
+
+      const endLocation = locationFor(
+        assignment.id,
+        "end"
+      );
+
+      const latestNotification = (
+        state.notificationsByAssignment.get(
+          assignment.id
+        ) || []
+      )[0];
+
+      const canEdit =
+        (
+          [
+            "draft",
+            "declined_reassignment_required"
+          ].includes(assignment.status) ||
+          (
+            isManager() &&
+            assignment.status === "accepted" &&
+            !assignment.started_at
+          )
+        ) &&
+        canManageAssignmentInPortal(assignment);
+
+      const canSend =
+        assignment.status === "draft" &&
+        canManageAssignmentInPortal(assignment);
+
+      const canReassign =
+        isManager() &&
+        assignment.status ===
+          "declined_reassignment_required";
+
+      const canRetryEmail =
+        canRetryAssignmentInvitations(assignment) &&
+        latestNotification &&
+        ["pending", "error"].includes(
+          latestNotification.status
+        );
+
+      const canReleaseInvitations =
+        canRetryAssignmentInvitations(assignment) &&
+        [
+          "accepted",
+          "in_progress",
+          "completed"
+        ].includes(assignment.status) &&
+        assignment.invitation_release_status !==
+          "released";
+
+      const canAddCost =
+        isManager() &&
+        !["paid", "cancelled"].includes(
+          assignment.status
+        );
+
+      const canCancel =
+        isManager() &&
+        [
+          "draft",
+          "pending_acceptance"
+        ].includes(assignment.status);
+
+      const canArchive =
+        isManager() &&
+        assignment.is_deleted !== true &&
+        !assignment.started_at &&
+        ![
+          "in_progress",
+          "completed",
+          "ended",
+          "paid"
+        ].includes(assignment.status);
+
+      const canViewAdministrativeCosts =
+        isManager() ||
+        isCEO() ||
+        isPayrollTeam();
+
+      return `
+        <article class="assignment-card">
+          <div class="assignment-top">
+            <div>
+              <p class="assignment-number">
+                Assignment #${escapeHtml(
+                  assignment.assignment_number
+                )}
+              </p>
+
+              <h3>
+                ${escapeHtml(
+                  assignment.title ||
+                    state.assignmentTypes.get(
+                      assignment.assignment_type_code
+                    ) ||
+                    "Assignment"
+                )}
+              </h3>
+
+              <p class="assignment-sub">
+                ${escapeHtml(
+                  state.assignmentTypes.get(
+                    assignment.assignment_type_code
+                  ) ||
+                    assignment.assignment_type_code
+                )}
+                ·
+                ${escapeHtml(
+                  assignment.vehicle ||
+                    "No vehicle entered"
+                )}
+              </p>
+            </div>
+
+            ${statusBadge(assignment.status)}
+          </div>
+
+          <div class="detail-grid">
+            ${detail("Car Concierge", concierge)}
+
+            ${detail(
+              "Sell Smart Agent",
+              listingAgent?.full_name ||
+                "Not applicable"
+            )}
+
+            ${detail(
+              "Hourly Rate",
+              `${formatMoney(
+                assignment.hourly_rate
+              )} per hour`
+            )}
+
+            ${detail(
+              "Accepted",
+              assignment.accepted_at
+                ? formatCentralDateTime(
+                    assignment.accepted_at
+                  )
+                : "Not accepted"
+            )}
+
+            ${detail(
+              "Invitation Release",
+              statusLabel(
+                assignment.invitation_release_status ||
+                  "not_released"
+              )
+            )}
+
+            ${detail(
+              "Calculated Pay",
+              formatMoney(
+                pay.total_assignment_pay ?? 0
+              )
+            )}
+          </div>
+
+          ${
+            assignment.decline_explanation
+              ? `
+                <div class="request-panel">
+                  <span class="panel-title">
+                    Declined Due to Prior Appointment
+                  </span>
+
+                  ${escapeHtml(
+                    assignment.decline_explanation
+                  )}
+                </div>
+              `
+              : ""
+          }
+
+          ${
+            assignment.invitation_release_error
+              ? `
+                <div class="inline-error">
+                  ${escapeHtml(
+                    assignment.invitation_release_error
+                  )}
+                </div>
+              `
+              : ""
+          }
+
+          ${
+            isPayrollTeam()
+              ? ""
+              : renderAppointments(
+                  assignment,
+                  true
+                )
+          }
+
+          ${
+            assignment.description
+              ? `
+                <div class="instructions">
+                  <span class="panel-title">
+                    Overall Internal Notes
+                  </span>
+
+                  ${linkify(
+                    assignment.description
+                  )}
+                </div>
+              `
+              : ""
+          }
+
+          ${renderCompletionAdmin(assignment)}
+
+          ${
+            isManager()
+              ? renderLocations(
+                  startLocation,
+                  endLocation
+                )
+              : ""
+          }
+
+          ${
+            canViewAdministrativeCosts
+              ? renderCostsAdmin(
+                  costs,
+                  pendingCostCount
+                )
+              : ""
+          }
+
+          <div class="card-actions">
+            ${
+              canEdit
+                ? `
+                  <button
+                    class="button button-light"
+                    data-action="edit-assignment"
+                    data-id="${assignment.id}"
+                  >
+                    Edit
+                  </button>
+                `
+                : ""
+            }
+
+            ${
+              canSend
+                ? `
+                  <button
+                    class="button button-purple"
+                    data-action="send-acceptance"
+                    data-id="${assignment.id}"
+                  >
+                    Send for Acceptance
+                  </button>
+                `
+                : ""
+            }
+
+            ${
+              canReassign
+                ? `
+                  <button
+                    class="button button-purple"
+                    data-action="open-reassign"
+                    data-id="${assignment.id}"
+                  >
+                    Reassign Car Concierge
+                  </button>
+                `
+                : ""
+            }
+
+            ${
+              canRetryEmail
+                ? `
+                  <button
+                    class="button button-light"
+                    data-action="retry-notification"
+                    data-notification-id="${latestNotification.id}"
+                  >
+                    Retry Email
+                  </button>
+                `
+                : ""
+            }
+
+            ${
+              canReleaseInvitations
+                ? `
+                  <button
+                    class="button button-green"
+                    data-action="release-invites"
+                    data-id="${assignment.id}"
+                  >
+                    Release or Retry Invitations
+                  </button>
+                `
+                : ""
+            }
+
+            ${
+              canAddCost
+                ? `
+                  <button
+                    class="button button-light"
+                    data-action="add-cost"
+                    data-id="${assignment.id}"
+                  >
+                    Add Approved Amount
+                  </button>
+                `
+                : ""
+            }
+
+            ${
+              canCancel
+                ? `
+                  <button
+                    class="button button-light"
+                    data-action="cancel-assignment"
+                    data-id="${assignment.id}"
+                  >
+                    Cancel
+                  </button>
+                `
+                : ""
+            }
+
+            ${
+              canArchive
+                ? `
+                  <button
+                    class="button button-danger"
+                    data-action="open-archive-assignment"
+                    data-id="${assignment.id}"
+                  >
+                    Archive Assignment
+                  </button>
+                `
+                : ""
+            }
+          </div>
+        </article>
+      `;
+    }
+        function renderConciergeCard(a){const pay=state.paySummaries.get(a.id)||{},comp=completionFor(a.id),costs=costsFor(a.id),canStart=a.status==="accepted"&&!a.started_at,active=a.status==="in_progress",ready=canEnd(a,comp);return`<article class="assignment-card"><div class="assignment-top"><div><p class="assignment-number">Assignment #${escapeHtml(a.assignment_number)}</p><h3>${escapeHtml(a.title||state.assignmentTypes.get(a.assignment_type_code)||"Assignment")}</h3><p class="assignment-sub">${escapeHtml(state.assignmentTypes.get(a.assignment_type_code)||a.assignment_type_code)} · ${escapeHtml(a.vehicle||"No vehicle entered")}</p></div>${statusBadge(a.status)}</div>${renderAppointments(a,false)}${a.description?`<div class="instructions"><span class="panel-title">Overall Internal Notes</span>${linkify(a.description)}</div>`:""}<div class="detail-grid">${detail("Hourly Rate",`${formatMoney(a.hourly_rate)} per hour`)}${detail("Actual Start",a.started_at?formatCentralDateTime(a.started_at):"Not started")}${detail("Actual End",a.ended_at?formatCentralDateTime(a.ended_at):"Not completed")}${detail("Calculated Time",pay.hours_worked==null?"0.00 hours":formatHours(pay.hours_worked))}${detail("Approved Additional",formatMoney(pay.approved_additional_costs??0))}${detail("Calculated Pay",formatMoney(pay.total_assignment_pay??0))}</div>${a.status==="pending_acceptance"?'<div class="requirements-panel"><span class="panel-title">Response Required</span>Accept the assignment to release all prepared calendar invitations. Decline is permitted only because of a prior appointment.</div>':""}${active?`<div class="requirements-panel"><span class="panel-title">Completion Requirements</span>${escapeHtml(requirementSummary(a,comp))}</div>`:""}${renderCostsConcierge(costs)}<div class="card-actions">${a.status==="pending_acceptance"?`<button class="button button-green" data-action="accept-assignment" data-id="${a.id}" data-version="${a.request_version}">Accept Assignment</button><button class="button button-danger" data-action="open-decline" data-id="${a.id}" data-version="${a.request_version}">Decline</button>`:""}${a.status==="accepted"&&a.invitation_release_status!=="released"?`<button class="button button-light" data-action="release-invites" data-id="${a.id}">Retry Calendar Invitations</button>`:""}${canStart?`<button class="button button-green" data-action="start-assignment" data-id="${a.id}">Start Assignment</button>`:""}${active&&a.assignment_type_code==="photos_video"?`<button class="button button-light" data-action="ratings" data-id="${a.id}">${photoReady(comp)?"Edit Ratings":"Complete Ratings"}</button>`:""}${active&&a.assignment_type_code==="showing"?`<button class="button button-light" data-action="open-liability" data-id="${a.id}">Open Assumption of Liability Form</button>`:""}${active&&a.assignment_type_code==="showing"&&comp?.liability_link_opened_at&&!comp?.liability_completed_confirmed?`<button class="button button-purple" data-action="confirm-liability" data-id="${a.id}">Confirm Form Completed</button>`:""}${active&&a.assignment_type_code==="mail"?`<button class="button button-light" data-action="mail-details" data-id="${a.id}">${mailReady(comp)?"Edit Tracking":"Add Tracking"}</button>`:""}${active?`<button class="button button-purple" data-action="end-assignment" data-id="${a.id}" ${ready?"":"disabled"}>End Assignment</button>`:""}${!["paid","cancelled"].includes(a.status)?`<button class="button button-light" data-action="request-amount" data-id="${a.id}">Request Additional Amount</button>`:""}</div>${active&&!ready?'<div class="inline-error">End Assignment is blocked until all completion requirements are satisfied.</div>':""}</article>`}
+
+    function renderLocations(start,end){if(!start&&!end)return"";return`<div class="private-panel"><span class="panel-title">Private Start and End Locations</span>${start?`Start: <a href="${mapLink(start)}" target="_blank" rel="noopener">Open Map</a> · ${escapeHtml(formatCentralDateTime(start.captured_at))}<br>`:"Start: Not captured<br>"}${end?`End: <a href="${mapLink(end)}" target="_blank" rel="noopener">Open Map</a> · ${escapeHtml(formatCentralDateTime(end.captured_at))}`:"End: Not captured"}</div>`}
+    function renderCompletionAdmin(a){const c=completionFor(a.id);if(!c)return"";if(a.assignment_type_code==="photos_video"){return`<div class="private-panel"><span class="panel-title">Vehicle Condition Ratings</span>${[["Interior",c.interior_rating,c.interior_notes],["Exterior",c.exterior_rating,c.exterior_notes],["Front Tires",c.front_tires_rating,c.front_tires_notes],["Rear Tires",c.rear_tires_rating,c.rear_tires_notes]].map(x=>`${escapeHtml(x[0])}: ${x[1]??"Not rated"}${x[2]?` · ${escapeHtml(x[2])}`:""}`).join("<br>")}</div>`}if(a.assignment_type_code==="showing")return`<div class="private-panel"><span class="panel-title">Assumption of Liability</span>Link opened: ${c.liability_link_opened_at?"Yes":"No"}<br>Completed confirmed: ${c.liability_completed_confirmed?"Yes":"No"}</div>`;if(a.assignment_type_code==="mail")return`<div class="private-panel"><span class="panel-title">Mailing Check Details</span>Carrier: ${escapeHtml(c.mail_carrier||"Not entered")}<br>Tracking: ${escapeHtml(c.mail_tracking_number||"Not entered")}<br>Mailed: ${c.mailing_confirmed?"Yes":"No"}</div>`;return""}
+    function renderCostsAdmin(costs, pendingCount) {
+      if (!costs.length) {
+        return "";
+      }
+
+      const canReview = isManager();
+
+      return `
+        <div class="request-panel">
+          <span class="panel-title">
+            Additional Amounts
+          </span>
+
+          <ul class="mini-list">
+            ${costs
+              .map(cost => {
+                const reviewButtons =
+                  canReview &&
+                  cost.request_source ===
+                    "contractor_request" &&
+                  cost.status === "pending"
+                    ? `
+                      <div class="card-actions">
+                        <button
+                          class="button button-green button-small"
+                          data-action="review-request"
+                          data-cost-id="${cost.id}"
+                          data-decision="approved"
+                        >
+                          Approve
+                        </button>
+
+                        <button
+                          class="button button-danger button-small"
+                          data-action="review-request"
+                          data-cost-id="${cost.id}"
+                          data-decision="denied"
+                        >
+                          Deny
+                        </button>
+                      </div>
+                    `
+                    : "";
+
+                return `
+                  <li>
+                    <span>
+                      <strong>
+                        ${escapeHtml(cost.description)}
+                      </strong>
+
+                      ${
+                        cost.notes
+                          ? `<br>${escapeHtml(cost.notes)}`
+                          : ""
+                      }
+                    </span>
+
+                    <span>
+                      ${formatMoney(
+                        cost.approved_amount ??
+                        cost.amount
+                      )}
+                      ${statusBadge(cost.status)}
+                      ${reviewButtons}
+                    </span>
+                  </li>
+                `;
+              })
+              .join("")}
+          </ul>
+
+          ${
+            canReview && pendingCount
+              ? `
+                <div class="inline-error">
+                  ${pendingCount}
+                  request${pendingCount === 1 ? "" : "s"}
+                  awaiting review.
+                </div>
+              `
+              : ""
+          }
+        </div>
+      `;
+    }
+        function renderCostsConcierge(costs){const r=costs.filter(x=>x.request_source==="contractor_request");if(!r.length)return"";return`<div class="request-panel"><span class="panel-title">Your Additional Amount Requests</span><ul class="mini-list">${r.map(x=>`<li><span>${escapeHtml(x.description)}</span><span>${formatMoney(x.amount)} ${x.status==="pending"?'<span class="badge badge-yellow">Pending Client Services Director Approval</span>':statusBadge(x.status)}</span></li>`).join("")}</ul></div>`}
+
+    function photoReady(c){if(!c)return false;return[[c.interior_rating,c.interior_notes],[c.exterior_rating,c.exterior_notes],[c.front_tires_rating,c.front_tires_notes],[c.rear_tires_rating,c.rear_tires_notes]].every(([r,n])=>Number.isInteger(Number(r))&&Number(r)>=1&&Number(r)<=10&&(Number(r)>5||String(n||"").trim()))}
+    function showingReady(c){return!!(c?.liability_link_opened_at&&c?.liability_completed_confirmed&&c?.liability_completed_confirmed_at)} function mailReady(c){return!!(String(c?.mail_carrier||"").trim()&&String(c?.mail_tracking_number||"").trim()&&c?.mailing_confirmed&&c?.mailing_confirmed_at)}
+    function canEnd(a,c){if(a.status!=="in_progress")return false;if(a.assignment_type_code==="photos_video")return photoReady(c);if(a.assignment_type_code==="showing")return showingReady(c);if(a.assignment_type_code==="mail")return mailReady(c);return true}
+    function requirementSummary(a,c){if(a.assignment_type_code==="photos_video")return photoReady(c)?"All four ratings are complete.":"Rate Interior, Exterior, Front Tires, and Rear Tires. Notes are required for ratings of 5 or below.";if(a.assignment_type_code==="showing")return showingReady(c)?"Assumption of Liability requirement is complete.":"Open the Assumption of Liability form, complete it, return the vehicle to the Seller, then confirm completion.";if(a.assignment_type_code==="mail")return mailReady(c)?`Mailing confirmed: ${c.mail_carrier} ${c.mail_tracking_number}`:"Enter the carrier and tracking number and confirm the check was mailed.";return"Complete the assignment instructions. Location is required when ending."}
+
+    function commissionEligibilityForProfile(profileId){
+      return state.commissionEligibilityByProfile.get(profileId)||[];
+    }
+    function profileEligibleFor(profileId,programCode){
+      return commissionEligibilityForProfile(profileId).some(row=>row.program_code===programCode&&row.eligible===true);
+    }
+    function commissionEligibilityLabels(profileId){
+      const labels={vehicle_finder:"Vehicle Finder",vehicle_protection_plan:"Vehicle Protection Plan",sell_smart:"Sell Smart",cash_buyer:"Cash Buyer"};
+      return commissionEligibilityForProfile(profileId).filter(row=>row.eligible===true).map(row=>labels[row.program_code]||titleCase(row.program_code));
+    }
+    function renderUserCard(user,archived=false){
+      const roles=rolesForProfile(user.id);
+      const eligibility=commissionEligibilityLabels(user.id);
+      const isSelf=user.id===state.profile.id;
+      return `<article class="directory-card ${archived?"archive-card":""}"><div class="assignment-top"><div><h3>${escapeHtml(user.full_name||user.email)}</h3><div class="directory-meta">${escapeHtml(user.email||"No email")}<br>Roles: ${escapeHtml(roles.map(roleLabel).join(" · ")||"No active roles")}<br>Hourly Rate: <span class="user-rate">${profileHasRole(user.id,"car_concierge")?`${formatMoney(user.default_hourly_rate)} per hour`:"Not applicable"}</span><br>Commission Eligible: ${escapeHtml(eligibility.join(" · ")||"No")}</div>${archived&&user.archive_reason?`<div class="archive-reason"><strong>Archive reason:</strong> ${escapeHtml(user.archive_reason)}</div>`:""}</div>${statusBadge(archived?"archived":"active")}</div><div class="card-actions">${archived?`<button class="button button-green" data-action="restore-user" data-id="${user.id}">Restore User</button><button class="button button-text-danger" data-action="assess-delete-user" data-id="${user.id}">Check Permanent Deletion</button>`:`<button class="button button-light" data-action="edit-user" data-id="${user.id}">Edit User</button>${isSelf?"":`<button class="button button-danger" data-action="open-archive-user" data-id="${user.id}">Archive User</button>`}`}</div></article>`;
+    }
+    function renderUsers(){
+      const users=[...state.profiles.values()].sort((a,b)=>String(a.full_name||a.email).localeCompare(String(b.full_name||b.email)));
+      const activeUsers=users.filter(user=>user.active===true&&!user.archived_at);
+      const archivedUsers=users.filter(user=>user.active===false||Boolean(user.archived_at));
+      const activeConcierges=activeUsers.filter(user=>profileHasRole(user.id,"car_concierge")).length;
+      const showingArchived=state.userStatusFilter==="archived";
+      const visibleUsers=showingArchived?archivedUsers:activeUsers;
+      const visibleLabel=showingArchived?"Archived Users":"Active Users";
+      const visibleCountLabel=showingArchived?`${archivedUsers.length} archived`:`${activeUsers.length} active`;
+      const emptyMessage=showingArchived?"No archived portal users.":"No active portal users.";
+      E.portalContent.className="";
+      E.portalContent.innerHTML=`<div class="hero"><div><p class="eyebrow">Administration</p><h1>Users & Rates</h1><p>Manage active users, archive access without deleting history, and control commission eligibility separately from portal roles.</p></div><div class="hero-actions"><button class="button button-purple" data-action="add-user">Add User</button><button class="button button-light" data-action="refresh">Refresh</button></div></div><div class="summary-grid">${summaryCard("Portal Users",users.length)}${summaryCard("Active Users",activeUsers.length)}${summaryCard("Archived Users",archivedUsers.length)}${summaryCard("Active Car Concierges",activeConcierges)}</div><div class="user-filter-bar"><span class="user-filter-label">Show</span><div class="user-filter-group" role="group" aria-label="Filter portal users"><button class="user-filter-button ${showingArchived?"":"active"}" type="button" data-action="filter-users" data-filter="active" aria-pressed="${showingArchived?"false":"true"}">Active Users (${activeUsers.length})</button><button class="user-filter-button ${showingArchived?"active":""}" type="button" data-action="filter-users" data-filter="archived" aria-pressed="${showingArchived?"true":"false"}">Archived Users (${archivedUsers.length})</button></div></div><div class="section-heading"><h2>${visibleLabel}</h2><span>${visibleCountLabel}</span></div><div class="directory-grid">${visibleUsers.map(user=>renderUserCard(user,showingArchived)).join("")||`<div class="empty-card">${emptyMessage}</div>`}</div>`;
+    }
+
+    function renderDirectory(){const agents=[...state.listingAgents.values()];E.portalContent.className="";E.portalContent.innerHTML=`<div class="hero"><div><p class="eyebrow">Administration</p><h1>Sell Smart Agent Directory</h1><p>Manage phone numbers, iAutoAgent emails, portal accounts, and calendar IDs.</p></div><div class="hero-actions"><button class="button button-purple" data-action="add-listing-agent">Add Sell Smart Agent</button><button class="button button-light" data-action="refresh">Refresh</button></div></div><div class="section-heading"><h2>Sell Smart Agents</h2><span>${agents.length} total</span></div><div class="directory-grid">${agents.map(a=>`<article class="directory-card"><div class="assignment-top"><div><h3>${escapeHtml(a.full_name)}</h3><div class="directory-meta">${escapeHtml(a.phone||"No phone")}<br>${escapeHtml(a.email||"No iAutoAgent email")}<br>Calendar: ${escapeHtml(a.google_calendar_id||"Not configured")}<br>Portal: ${a.profile_id?escapeHtml(profileName(a.profile_id)):"Not linked"}</div></div>${statusBadge(a.active?"active":"inactive")}</div><div class="card-actions"><button class="button button-light" data-action="edit-listing-agent" data-id="${a.id}">Edit</button></div></article>`).join("")||'<div class="empty-card">No Sell Smart Agents.</div>'}</div>`}
+    function renderCommissions(){
+      const companyView=isManager()||isCEO();
+      E.portalContent.className="";
+      if(companyView){
+        const detailRows=state.commissionCompanyDetail;
+        const projected=state.commissionCompanySummary.reduce((sum,row)=>sum+Number(row.projected_commission||0),0);
+        const approved=state.commissionCompanySummary.reduce((sum,row)=>sum+Number(row.approved_commission||0),0);
+        const paid=state.commissionCompanySummary.reduce((sum,row)=>sum+Number(row.paid_commission||0),0);
+        const total=state.commissionCompanySummary.reduce((sum,row)=>sum+Number(row.total_commission||0),0);
+        const unpaid=Math.max(0,total-paid);
+        E.portalContent.innerHTML=`<div class="hero"><div><p class="eyebrow">Company Commission Dashboard</p><h1>Company Commissions</h1><p>View company totals and every recipient. CEO access is view-only; Client Services controls eligibility and corrections.</p></div><div class="hero-actions"><button class="button button-light" data-action="refresh">Refresh</button></div></div><div class="summary-grid">${summaryCard("Projected",formatMoney(projected))}${summaryCard("Approved",formatMoney(approved))}${summaryCard("Paid",formatMoney(paid))}${summaryCard("Unpaid",formatMoney(unpaid))}</div>${state.commissionError?`<div class="notice notice-info">Commission records could not be loaded: ${escapeHtml(state.commissionError)}</div>`:""}<div class="section-heading"><h2>Recipients</h2><span>${state.commissionRecipientSummary.length} summary rows</span></div>${state.commissionRecipientSummary.length?`<div class="table-wrap"><table class="commission-table"><thead><tr><th>Recipient</th><th>Period</th><th>Transactions</th><th>Projected</th><th>Approved</th><th>Paid</th><th>Total</th></tr></thead><tbody>${state.commissionRecipientSummary.map(row=>`<tr><td>${escapeHtml(row.recipient_name||row.recipient_email||"Recipient")}</td><td>${escapeHtml(`${row.period_start||"—"} to ${row.period_end||"—"}`)}</td><td>${escapeHtml(row.transaction_count??0)}</td><td>${formatMoney(row.projected_commission)}</td><td>${formatMoney(row.approved_commission)}</td><td>${formatMoney(row.paid_commission)}</td><td><strong>${formatMoney(row.total_commission)}</strong></td></tr>`).join("")}</tbody></table></div>`:'<div class="empty-card">No commission recipients are available yet.</div>'}<div class="section-heading"><h2>Commission Detail</h2><span>${detailRows.length} transactions</span></div>${detailRows.length?`<div class="table-wrap"><table class="commission-table"><thead><tr><th>Recipient</th><th>Transaction</th><th>Program</th><th>Gross Profit</th><th>Rate</th><th>Commission</th><th>Status</th></tr></thead><tbody>${detailRows.map(row=>`<tr><td>${escapeHtml(row.recipient_name||row.recipient_email||"Recipient")}</td><td>${escapeHtml(row.case_number||row.client_name||row.vehicle||"Transaction")}</td><td>${escapeHtml(titleCase(row.program_code||"—"))}</td><td>${formatMoney(row.gross_profit)}</td><td>${row.commission_rate==null?"—":`${escapeHtml(row.commission_rate)}%`}</td><td><strong>${formatMoney(row.total_commission)}</strong></td><td>${statusBadge(row.commission_status||"draft")}</td></tr>`).join("")}</tbody></table></div>`:'<div class="empty-card">No commission transactions are available yet.</div>'}`;
+        return;
+      }
+      const rows=state.commissionItems;
+      const total=rows.reduce((sum,row)=>sum+Number(row.total_commission||0),0);
+      const paid=rows.filter(row=>row.status==="paid").reduce((sum,row)=>sum+Number(row.total_commission||0),0);
+      const approved=rows.filter(row=>row.status==="approved").reduce((sum,row)=>sum+Number(row.total_commission||0),0);
+      E.portalContent.innerHTML=`<div class="hero"><div><p class="eyebrow">Agent Dashboard</p><h1>Your Commissions</h1><p>Only your approved and paid commission records are shown. Portal roles do not automatically create commission eligibility.</p></div><div class="hero-actions"><button class="button button-light" data-action="refresh">Refresh</button></div></div><div class="summary-grid">${summaryCard("Approved",formatMoney(approved))}${summaryCard("Paid",formatMoney(paid))}${summaryCard("Total",formatMoney(total))}${summaryCard("Transactions",rows.length)}</div>${state.commissionError?`<div class="notice notice-info">Commission records could not be loaded: ${escapeHtml(state.commissionError)}</div>`:""}${rows.length?`<div class="table-wrap"><table class="commission-table"><thead><tr><th>Transaction</th><th>Program</th><th>Gross Profit</th><th>Rate</th><th>Commission</th><th>Status</th></tr></thead><tbody>${rows.map(row=>`<tr><td>${escapeHtml(row.case_number||row.client_name||row.vehicle||"Transaction")}</td><td>${escapeHtml(titleCase(row.program_code||"—"))}</td><td>${formatMoney(row.gross_profit)}</td><td>${row.commission_rate==null?"—":`${escapeHtml(row.commission_rate)}%`}</td><td><strong>${formatMoney(row.total_commission)}</strong></td><td>${statusBadge(row.status||"approved")}</td></tr>`).join("")}</tbody></table></div>`:'<div class="empty-card">No approved or paid commissions are available.</div>'}`;
+    }
+
+    function activeConcierges(){return[...state.profiles.values()].filter(p=>p.active&&!p.archived_at&&profileHasRole(p.id,"car_concierge")).sort((a,b)=>String(a.full_name||a.email).localeCompare(String(b.full_name||b.email)))}
+    function ownListingAgent() {
+      return [...state.listingAgents.values()].find(
+        agent =>
+          agent.profile_id === state.profile.id &&
+          agent.active
+      ) || null;
+    }
+
+    function isOwnListingAgentAssignment(assignment) {
+      const listingAgent = ownListingAgent();
+
+      if (!listingAgent || !assignment) {
+        return false;
+      }
+
+      return (
+        assignment.assignment_type_code === "showing" &&
+        assignment.listing_agent_id === listingAgent.id &&
+        assignment.scheduled_by_profile_id ===
+          state.profile.id
+      );
+    }
+
+    function canManageAssignmentInPortal(assignment) {
+      if (isManager()) {
+        return true;
+      }
+
+      if (!isListingAgent()) {
+        return false;
+      }
+
+      return (
+        isOwnListingAgentAssignment(assignment) &&
+        [
+          "draft",
+          "declined_reassignment_required"
+        ].includes(assignment.status)
+      );
+    }
+
+    function canRetryAssignmentInvitations(assignment) {
+      if (isManager()) {
+        return true;
+      }
+
+      return (
+        isListingAgent() &&
+        isOwnListingAgentAssignment(assignment)
+      );
+    }
+        function populateAssignmentOptions(){let conc=activeConcierges();E.assignmentConcierge.innerHTML='<option value="">Select Car Concierge</option>'+conc.map(p=>`<option value="${p.id}">${escapeHtml(p.full_name||p.email)}</option>`).join("");let types=[...state.assignmentTypes.entries()];if(isListingAgent()&&!isManager())types=types.filter(([c])=>c==="showing");E.assignmentType.innerHTML='<option value="">Select Type</option>'+types.map(([c,n])=>`<option value="${c}">${escapeHtml(n)}</option>`).join("");let agents=[...state.listingAgents.values()].filter(a=>a.active);if(isListingAgent()&&!isManager()){const own=ownListingAgent();agents=own?[own]:[]}E.assignmentListingAgent.innerHTML='<option value="">Select Sell Smart Agent</option>'+agents.map(a=>`<option value="${a.id}">${escapeHtml(a.full_name)}</option>`).join("")}
+    function updateRate(){const p=state.profiles.get(E.assignmentConcierge.value);E.assignmentRatePreview.textContent=p?`${formatMoney(p.default_hourly_rate)} per hour`:"—"}
+    function field(id,label,type="text",value="",opts=""){return`<div class="field"><label for="${id}">${label}</label><input id="${id}" type="${type}" value="${escapeHtml(value)}" ${opts}></div>`}
+    function textarea(id,label,value="",placeholder=""){return`<div class="field field-full"><label for="${id}">${label}</label><textarea id="${id}" placeholder="${escapeHtml(placeholder)}">${escapeHtml(value)}</textarea></div>`}
+    function appointmentSection(prefix,title,contactLabel,appt={}){const d=formatCentralDateInput(appt.scheduled_start_at)||getCentralDateString(),st=formatCentralTimeInput(appt.scheduled_start_at)||"09:00",et=formatCentralTimeInput(appt.scheduled_end_at)||"10:00";return`<details class="form-section" open><summary>${escapeHtml(title)}</summary><div class="section-body"><div class="form-grid">${field(`${prefix}Name`,`${contactLabel} Name`,"text",appt.contact_name||"","required")}${field(`${prefix}Phone`,`${contactLabel} Phone`,"tel",appt.contact_phone||"","required")}${field(`${prefix}Email`,`${contactLabel} Email`,"email",appt.contact_email||"","required")}${field(`${prefix}Company`,"Company Name", "text",appt.contact_company||"")}${field(`${prefix}Date`,"Date","date",d,"required")}${field(`${prefix}Start`,"Start Time","time",st,"required")}${field(`${prefix}End`,"End Time","time",et,"required")}${field(`${prefix}Location`,"Location","text",appt.location||"","required")}${field(`${prefix}ClientTitle`,"Editable Client Event Title","text",appt.client_event_title||"","required")}${textarea(`${prefix}ClientNotes`,"Client-Safe Event Notes",appt.client_event_notes||"")}${textarea(`${prefix}InternalNotes`,"Internal Car Concierge Notes",appt.concierge_event_notes||"")}</div></div></details>`}
+    function renderDynamicForm(type,a=null){const ap=appointmentsFor(a?.id),ap1=ap.find(x=>x.sequence_number===1)||{},ap2=ap.find(x=>x.sequence_number===2)||{};E.listingAgentField.classList.toggle("hidden",!["showing","closing"].includes(type));E.organizerField.classList.toggle("hidden",type!=="showing");if(isListingAgent()&&!isManager()){E.assignmentOrganizer.value="listing_agent";E.assignmentOrganizer.disabled=true}else E.assignmentOrganizer.disabled=false;if(type==="showing"){const sd=state.showingDetails.get(a?.id)||{};E.assignmentDynamicFields.innerHTML=`<details class="form-section" open><summary>Showing Details</summary><div class="section-body"><div class="field"><label for="leadCurrentVehicle">Lead's Current Vehicle</label><input id="leadCurrentVehicle" value="${escapeHtml(sd.lead_current_vehicle||"")}" placeholder="Optional"></div><div class="subtle-panel">One timer covers Pick Up from Seller → Travel → Show to Lead → Return vehicle to Seller → End Assignment.</div></div></details>${appointmentSection("appt1","1. Pick Up from Seller","Seller",ap1)}${appointmentSection("appt2","2. Showing with Lead","Lead",ap2)}`;return}if(type==="closing"){const cd=state.closingDetails.get(a?.id)||{};E.assignmentDynamicFields.innerHTML=`<details class="form-section" open><summary>Closing Program and Title Details</summary><div class="section-body"><div class="form-grid"><div class="field"><label for="programType">Program</label><select id="programType"><option value="sell_smart" ${cd.program_type!=="cash_buyer"?"selected":""}>Sell Smart</option><option value="cash_buyer" ${cd.program_type==="cash_buyer"?"selected":""}>Cash Buyer</option></select></div><div class="field"><label for="sellerTitleHelp">Does Seller need help signing the title?</label><select id="sellerTitleHelp" required><option value="">Select Yes or No</option><option value="yes" ${cd.seller_needs_title_assistance===true?"selected":""}>Yes</option><option value="no" ${cd.seller_needs_title_assistance===false?"selected":""}>No</option></select></div>${field("firstMileage","1st Title Assignment Mileage","number",cd.first_title_mileage??"","min=0 required")}${field("firstSaleDate","1st Title Assignment Sale Date","date",cd.first_title_sale_date||"","required")}${field("checkAmount","Amount of Check","number",cd.check_amount??"","min=0 step=.01 required")}${field("dealerNumber","Dealer Number","text",cd.dealer_number||"D6779","required")}<div id="sellSmartSecondFields" class="field-full"><div class="form-grid">${field("secondPurchaserName","2nd Purchaser Name","text",cd.second_purchaser_name||"")}${field("secondPurchaserAddress","2nd Purchaser Address","text",cd.second_purchaser_address||"")}${field("secondMileage","2nd Title Mileage","number",cd.second_title_mileage??"","min=0")}${field("secondSaleDate","2nd Title Date of Sale","date",cd.second_title_sale_date||"")}${field("salePrice","Sale Price","number",cd.sale_price??"","min=0 step=.01")}</div></div></div></div></details>${appointmentSection("appt1","1. Pick Up from Seller","Seller",ap1)}${appointmentSection("appt2","2. Drop Off","Buyer or Dealer POC",ap2)}`;toggleClosingFields();return}E.assignmentDynamicFields.innerHTML=appointmentSection("appt1","Appointment","Client Contact",ap1)}
+    function toggleClosingFields(){const el=$("sellSmartSecondFields"),program=$("programType")?.value;if(el)el.classList.toggle("hidden",program==="cash_buyer")}
+    function setSuggestedTitles(){const type=E.assignmentType.value,concierge=profileName(E.assignmentConcierge.value),vehicle=E.assignmentVehicle.value.trim();if(!type)return;const a1=$("appt1ClientTitle"),a2=$("appt2ClientTitle");if(type==="showing"){if(a1)a1.value=`${concierge} iAutoAgent pickup ${vehicle} from ${$("appt1Name")?.value.trim()||"Seller"}`.trim();if(a2)a2.value=`${concierge} iAutoAgent show ${vehicle} to ${$("appt2Name")?.value.trim()||"Lead"}`.trim()}else if(type==="closing"){if(a1)a1.value=`${concierge} iAutoAgent pick up ${vehicle} from ${$("appt1Name")?.value.trim()||"Seller"}`.trim();const program=$("programType")?.value,target=program==="cash_buyer"?[ $("appt2Name")?.value.trim(),$("appt2Company")?.value.trim()].filter(Boolean).join(" "):$("appt2Name")?.value.trim();if(a2)a2.value=`${concierge} iAutoAgent close ${vehicle} for ${target||"Recipient"}`.trim()}else if(a1){a1.value=`${concierge} iAutoAgent ${appointmentLabel(type).toLowerCase()} ${vehicle||E.assignmentTitle.value.trim()}`.trim()}}
+    function defaultParentTitle(type){return[state.assignmentTypes.get(type)||appointmentLabel(type),E.assignmentVehicle.value.trim()].filter(Boolean).join(" - ")}
+
+    function openAssignmentDialog(id=null){setNotice(E.assignmentFormNotice,"");E.assignmentForm.reset();E.assignmentId.value="";E.assignmentExistingStatus.value="";populateAssignmentOptions();let a=id?state.assignments.find(x=>x.id===id):null;if(a){E.assignmentDialogTitle.textContent=`Edit Assignment #${a.assignment_number}`;E.assignmentId.value=a.id;E.assignmentExistingStatus.value=a.status;E.assignmentType.value=a.assignment_type_code;E.assignmentConcierge.value=a.concierge_id;E.assignmentListingAgent.value=a.listing_agent_id||"";E.assignmentVehicle.value=a.vehicle||"";E.assignmentTitle.value=a.title||"";E.assignmentDescription.value=a.description||"";const ap=appointmentsFor(a.id)[0];E.assignmentOrganizer.value=ap?.client_event_organizer_type||"admin";renderDynamicForm(a.assignment_type_code,a);E.saveDraftButton.textContent=a.status==="accepted"?"Save Changes and Update Calendar":"Save Changes";E.sendAcceptanceButton.textContent=a.status==="declined_reassignment_required"?"Save Changes":"Save and Send for Acceptance";E.sendAcceptanceButton.classList.toggle("hidden",a.status!=="draft")}else{E.assignmentDialogTitle.textContent="Create Assignment";const type=isListingAgent()&&!isManager()?"showing":"";E.assignmentType.value=type;const own=ownListingAgent();if(own)E.assignmentListingAgent.value=own.id;E.assignmentOrganizer.value=isListingAgent()&&!isManager()?"listing_agent":"admin";E.assignmentTitle.value="";renderDynamicForm(type);E.saveDraftButton.textContent="Save Draft";E.sendAcceptanceButton.textContent="Save and Send for Acceptance";E.sendAcceptanceButton.classList.remove("hidden")}updateRate();openDialog(E.assignmentDialog)}
+    function readAppointment(prefix,type,role,sequence,organizer){const date=$(prefix+"Date").value,start=$(prefix+"Start").value,end=$(prefix+"End").value;const startIso=centralWallToIso(date,start),endIso=centralWallToIso(date,end);if(new Date(endIso)<=new Date(startIso))throw new Error(`${appointmentLabel(type)} end time must be after its start time.`);return{appointment_type:type,sequence_number:sequence,scheduled_start_at:startIso,scheduled_end_at:endIso,location:$(prefix+"Location").value.trim(),contact_role:role,contact_name:$(prefix+"Name").value.trim(),contact_phone:$(prefix+"Phone").value.trim(),contact_email:$(prefix+"Email").value.trim().toLowerCase(),contact_company:$(prefix+"Company").value.trim()||null,client_event_title:$(prefix+"ClientTitle").value.trim(),client_event_notes:$(prefix+"ClientNotes").value.trim()||null,concierge_event_notes:$(prefix+"InternalNotes").value.trim()||null,client_google_calendar_id:organizer.calendarId,client_event_organizer_type:organizer.type,client_event_organizer_profile_id:organizer.profileId,client_event_organizer_calendar_id:organizer.calendarId,client_calendar_sync_status:"not_scheduled",concierge_calendar_sync_status:"not_scheduled"}}
+    function organizerValues(type,listing){
+      if(type==="showing"&&E.assignmentOrganizer.value==="listing_agent"){
+        const linkedProfile=listing?.profile_id?state.profiles.get(listing.profile_id):null;
+        const organizerEmail=String(listing?.email||linkedProfile?.email||"").trim().toLowerCase();
+        if(!listing?.profile_id||!listing?.google_calendar_id||!organizerEmail)throw new Error("The Sell Smart Agent must have an iAutoAgent email, linked portal account, and Google Calendar ID before organizing the Showing.");
+        return{type:"listing_agent",profileId:listing.profile_id,calendarId:listing.google_calendar_id,email:organizerEmail}
+      }
+      if(!state.directorProfile)throw new Error("The Client Services Director portal profile could not be found.");
+      return{type:"admin",profileId:state.directorProfile.id,calendarId:"primary",email:state.directorProfile.email}
+    }
+    function getAssignmentPayload(){const type=E.assignmentType.value,concierge=state.profiles.get(E.assignmentConcierge.value),listing=state.listingAgents.get(E.assignmentListingAgent.value)||null;if(!type||!state.assignmentTypes.has(type))throw new Error("Select an assignment type.");if(!concierge||!concierge.active)throw new Error("Select an active Car Concierge.");if(["showing","closing"].includes(type)&&!listing)throw new Error("Select an active Sell Smart Agent.");const organizer=organizerValues(type,listing),vehicle=E.assignmentVehicle.value.trim(),title=E.assignmentTitle.value.trim()||defaultParentTitle(type);let appts=[];if(type==="showing")appts=[readAppointment("appt1","pickup","seller",1,organizer),readAppointment("appt2","showing","lead",2,organizer)];else if(type==="closing"){const program=$("programType").value;appts=[readAppointment("appt1","pickup","seller",1,organizer),readAppointment("appt2","dropoff",program==="cash_buyer"?"dealer_poc":"buyer",2,organizer)]}else appts=[readAppointment("appt1",type,"client",1,organizer)];for(const ap of appts){if(!ap.location||!ap.contact_name||!ap.contact_phone||!ap.contact_email||!ap.client_event_title)throw new Error(`Complete every required field for ${appointmentLabel(ap.appointment_type)}.`)}const first=appts[0];const parent={concierge_id:concierge.id,assignment_type_code:type,title,description:E.assignmentDescription.value.trim()||null,client_name:first.contact_name,client_email:first.contact_email,client_invite_notes:first.client_event_notes,vehicle:vehicle||null,assignment_date:formatCentralDateInput(first.scheduled_start_at),hourly_rate:Number(concierge.default_hourly_rate)||null,scheduled_start_at:first.scheduled_start_at,scheduled_end_at:appts[appts.length-1].scheduled_end_at,location:first.location,listing_agent_id:listing?.id||null,scheduled_by_profile_id:state.profile.id,client_services_director_profile_id:state.directorProfile?.id||null};let details=null;if(type==="showing")details={listing_agent_id:listing.id,lead_current_vehicle:$("leadCurrentVehicle").value.trim()||null};if(type==="closing"){const program=$("programType").value,help=$("sellerTitleHelp").value;if(!help)throw new Error("Select whether the Seller needs title-signing assistance.");details={program_type:program,seller_needs_title_assistance:help==="yes",first_title_mileage:Number($("firstMileage").value),first_title_sale_date:$("firstSaleDate").value,check_amount:Number($("checkAmount").value),second_purchaser_name:program==="sell_smart"?$("secondPurchaserName").value.trim()||null:null,second_purchaser_address:program==="sell_smart"?$("secondPurchaserAddress").value.trim()||null:null,second_title_mileage:program==="sell_smart"?Number($("secondMileage").value):null,second_title_sale_date:program==="sell_smart"?$("secondSaleDate").value||null:null,sale_price:program==="sell_smart"?Number($("salePrice").value):null,dealer_number:$("dealerNumber").value.trim()||"D6779"};if(!Number.isFinite(details.first_title_mileage)||!details.first_title_sale_date||!Number.isFinite(details.check_amount))throw new Error("Complete the first title assignment and check amount.");if(program==="sell_smart"&&(!details.second_purchaser_name||!details.second_purchaser_address||!Number.isFinite(details.second_title_mileage)||!details.second_title_sale_date||!Number.isFinite(details.sale_price)))throw new Error("Complete the Sell Smart second title assignment.");if(program==="cash_buyer"&&!appts[1].contact_company)throw new Error("Enter the dealer or company name for Cash Buyer Drop Off.")}return{parent,appts,details}}
+
+    async function saveAssignment(event){
+      event.preventDefault();
+
+      const mode=event.submitter?.dataset.mode||"save";
+      const normal=mode==="send"
+        ?"Save and Send for Acceptance"
+        :E.saveDraftButton.textContent;
+      const btn=event.submitter;
+
+      setNotice(E.assignmentFormNotice,"");
+      setLoading(btn,true,"Saving…",normal);
+
+      try{
+        const existingId=E.assignmentId.value;
+        const status=E.assignmentExistingStatus.value;
+        const existingAssignment=existingId
+          ?state.assignments.find(item=>item.id===existingId)
+          :null;
+
+        const isAcceptedNotStarted=
+          status==="accepted" &&
+          existingAssignment &&
+          !existingAssignment.started_at &&
+          isManager();
+
+        const{parent,appts,details}=getAssignmentPayload();
+        let id=existingId;
+        let number;
+
+        if(existingId){
+          if(
+            !["draft","declined_reassignment_required"].includes(status) &&
+            !isAcceptedNotStarted
+          ){
+            throw new Error(
+              status==="accepted"
+                ?"This accepted assignment can no longer be edited because it has already started."
+                :"This assignment is no longer editable."
+            );
+          }
+
+          const update={...parent};
+
+          if(status==="declined_reassignment_required"){
+            delete update.concierge_id;
+          }
+
+          const{data,error}=await supabaseClient
+            .from("car_concierge_assignments")
+            .update(update)
+            .eq("id",existingId)
+            .select("id,assignment_number")
+            .single();
+
+          if(error)throw error;
+          number=data.assignment_number;
+        }else{
+          const{data,error}=await supabaseClient
+            .from("car_concierge_assignments")
+            .insert({
+              ...parent,
+              status:"draft",
+              created_by:state.profile.id
+            })
+            .select("id,assignment_number")
+            .single();
+
+          if(error)throw error;
+          id=data.id;
+          number=data.assignment_number;
+        }
+
+        await replaceAssignmentChildren(
+          id,
+          parent.assignment_type_code,
+          appts,
+          details,
+          {preserveAppointments:isAcceptedNotStarted}
+        );
+
+        if(mode==="send"){
+          if(status==="declined_reassignment_required"){
+            throw new Error(
+              "Use Reassign Car Concierge from the assignment card after saving changes."
+            );
+          }
+
+          await requestAcceptance(id);
+        }
+
+        let noticeMessage;
+
+        if(isAcceptedNotStarted){
+          const result=await releaseInvitations(id);
+
+          noticeMessage=
+            result.invitation_release_status==="released"
+              ?`Assignment #${number} was updated and the calendar invitations were synchronized.`
+              :`Assignment #${number} was updated, but one or more calendar invitations require a retry.`;
+        }else{
+          noticeMessage=mode==="send"
+            ?`Assignment #${number} was sent to the Car Concierge for acceptance.`
+            :`Assignment #${number} was saved. No calendar invitation was sent.`;
+        }
+
+        closeDialog(E.assignmentDialog);
+
+        setNotice(
+          E.portalNotice,
+          noticeMessage,
+          isAcceptedNotStarted &&
+          noticeMessage.includes("require a retry")
+            ?"error"
+            :"success"
+        );
+
+        await loadData();
+        renderView();
+      }catch(err){
+        console.error(err);
+        setNotice(
+          E.assignmentFormNotice,
+          err.message||"The assignment could not be saved."
+        );
+      }finally{
+        setLoading(btn,false,"Saving…",normal);
+      }
+    }
+    async function replaceAssignmentChildren(
+      id,
+      type,
+      appts,
+      details,
+      options={}
+    ){
+      const preserveAppointments=
+        options.preserveAppointments===true;
+
+      if(preserveAppointments){
+        const existingAppointments=appointmentsFor(id);
+
+        for(const appointment of appts){
+          const existing=existingAppointments.find(
+            item=>
+              Number(item.sequence_number)===
+              Number(appointment.sequence_number)
+          );
+
+          if(existing){
+            const payload={
+              ...appointment,
+              client_calendar_sync_status:"pending_update",
+              concierge_calendar_sync_status:"pending_update"
+            };
+
+            const{error}=await supabaseClient
+              .from("car_concierge_assignment_appointments")
+              .update(payload)
+              .eq("id",existing.id);
+
+            if(error)throw error;
+          }else{
+            const{error}=await supabaseClient
+              .from("car_concierge_assignment_appointments")
+              .insert({
+                ...appointment,
+                assignment_id:id,
+                client_calendar_sync_status:"pending_create",
+                concierge_calendar_sync_status:"pending_create"
+              });
+
+            if(error)throw error;
+          }
+        }
+
+        const retainedSequences=new Set(
+          appts.map(item=>Number(item.sequence_number))
+        );
+
+        for(const existing of existingAppointments){
+          if(
+            !retainedSequences.has(
+              Number(existing.sequence_number)
+            )
+          ){
+            throw new Error(
+              "This accepted assignment cannot remove an existing appointment. Cancel and recreate the assignment if the appointment structure must change."
+            );
+          }
+        }
+      }else{
+        const{error:deleteError}=await supabaseClient
+          .from("car_concierge_assignment_appointments")
+          .delete()
+          .eq("assignment_id",id);
+
+        if(deleteError)throw deleteError;
+
+        const{error:insertError}=await supabaseClient
+          .from("car_concierge_assignment_appointments")
+          .insert(
+            appts.map(item=>({
+              ...item,
+              assignment_id:id
+            }))
+          );
+
+        if(insertError)throw insertError;
+      }
+
+      await supabaseClient
+        .from("car_concierge_showing_details")
+        .delete()
+        .eq("assignment_id",id);
+
+      await supabaseClient
+        .from("car_concierge_closing_details")
+        .delete()
+        .eq("assignment_id",id);
+
+      if(type==="showing"){
+        const{error}=await supabaseClient
+          .from("car_concierge_showing_details")
+          .insert({
+            assignment_id:id,
+            ...details
+          });
+
+        if(error)throw error;
+      }
+
+      if(type==="closing"){
+        const{error}=await supabaseClient
+          .from("car_concierge_closing_details")
+          .insert({
+            assignment_id:id,
+            ...details
+          });
+
+        if(error)throw error;
+      }
+    }
+    async function requestAcceptance(id){
+      const{data,error}=await supabaseClient.rpc("request_car_concierge_acceptance",{p_assignment_id:id});
+      if(error)throw error;
+      const notificationId=data?.notification_id||data?.[0]?.notification_id||data?.id||data?.[0]?.id||(typeof data==="string"?data:null);
+      if(!notificationId){
+        console.error("request_car_concierge_acceptance returned:",data);
+        throw new Error("The assignment was saved, but the database did not return a notification ID.");
+      }
+      await processNotification(notificationId)
+    }
+    async function processNotification(id){const{data,error}=await supabaseClient.functions.invoke("sync-car-concierge-calendar",{body:{operation:"process_notification",notification_id:id}});if(error)throw error;if(!data?.ok)throw new Error(data?.error||"The assignment email could not be sent.");return data}
+    async function releaseInvitations(id){const{data,error}=await supabaseClient.functions.invoke("sync-car-concierge-calendar",{body:{operation:"release_assignment_invitations",assignment_id:id}});if(error)throw error;if(!data?.ok&&data?.invitation_release_status!=="partial_error")throw new Error(data?.error||"The calendar invitations could not be released.");return data}
+
+    function openPasswordSetup(){showLogin();E.passwordSetupForm.reset();setNotice(E.passwordSetupNotice,"");openDialog(E.passwordSetupDialog)}
+    async function savePortalPassword(event){event.preventDefault();const password=E.newPortalPassword.value,confirmPassword=E.confirmPortalPassword.value;setLoading(E.savePortalPasswordButton,true,"Saving…","Save Password");setNotice(E.passwordSetupNotice,"");try{if(password.length<8)throw new Error("Password must contain at least 8 characters.");if(password!==confirmPassword)throw new Error("The passwords do not match.");const{error}=await supabaseClient.auth.updateUser({password});if(error)throw error;history.replaceState({},document.title,window.location.pathname);closeDialog(E.passwordSetupDialog);setNotice(E.portalNotice,"Your portal password was created.","success");await loadPortal()}catch(err){setNotice(E.passwordSetupNotice,err.message||"The password could not be saved.")}finally{setLoading(E.savePortalPasswordButton,false,"Saving…","Save Password")}}
+
+    function selectedUserRoles(){return[...E.userForm.querySelectorAll("[data-user-role]:checked")].map(input=>input.dataset.userRole)}
+    function selectedCommissionEligibility(){return[...E.userForm.querySelectorAll("[data-commission-program]")].map(input=>({program_code:input.dataset.commissionProgram,eligible:input.checked===true,notes:null}))}
+    function updateUserRoleDependentFields(){
+      const roles=selectedUserRoles();
+      const conciergeRequired=roles.includes("car_concierge");
+      const sellSmartRole=roles.includes("listing_agent");
+      const vfpRole=roles.includes("vfp_agent");
+      E.userHourlyRate.required=conciergeRequired;
+      E.userHourlyRate.disabled=!conciergeRequired;
+      E.userHourlyRateField.classList.toggle("hidden",!conciergeRequired);
+      if(!conciergeRequired)E.userHourlyRate.value="";
+      E.userSellSmartCommissionSection.classList.toggle("hidden",!sellSmartRole);
+      E.userVfpCommissionSection.classList.toggle("hidden",!vfpRole);
+      [E.userCommissionSellSmart,E.userCommissionCashBuyer].forEach(input=>{input.disabled=!sellSmartRole;if(!sellSmartRole)input.checked=false});
+      [E.userCommissionVehicleFinder,E.userCommissionVpp].forEach(input=>{input.disabled=!vfpRole;if(!vfpRole)input.checked=false});
+    }
+    function openUserDialog(id=null){
+      E.userForm.reset();setNotice(E.userFormNotice,"");E.userProfileId.value="";E.userEmail.readOnly=false;
+      E.userForm.querySelectorAll("[data-user-role]").forEach(input=>input.checked=false);
+      E.userForm.querySelectorAll("[data-commission-program]").forEach(input=>input.checked=false);
+      const user=id?state.profiles.get(id):null;
+      if(user){
+        if(user.archived_at||user.active===false)throw new Error("Restore the archived user before editing roles, rates, or commission eligibility.");
+        E.userDialogTitle.textContent="Edit Portal User";E.userProfileId.value=user.id;E.userFullName.value=user.full_name||"";E.userEmail.value=user.email||"";E.userEmail.readOnly=true;E.userHourlyRate.value=user.default_hourly_rate??"";
+        const roles=new Set(rolesForProfile(user.id));E.userForm.querySelectorAll("[data-user-role]").forEach(input=>input.checked=roles.has(input.dataset.userRole));
+        E.userForm.querySelectorAll("[data-commission-program]").forEach(input=>input.checked=profileEligibleFor(user.id,input.dataset.commissionProgram));
+        E.saveUserButton.textContent="Save User";
+      }else{
+        E.userDialogTitle.textContent="Add Portal User";E.saveUserButton.textContent="Send Invitation";
+      }
+      updateUserRoleDependentFields();openDialog(E.userDialog);
+    }
+    async function savePortalUser(event){
+      event.preventDefault();const id=E.userProfileId.value,roles=selectedUserRoles(),normal=id?"Save User":"Send Invitation";setLoading(E.saveUserButton,true,id?"Saving…":"Sending…",normal);setNotice(E.userFormNotice,"");
+      try{
+        if(!roles.length)throw new Error("Select at least one portal role.");
+        const rateValue=E.userHourlyRate.value.trim();
+        if(roles.includes("car_concierge")&&(!rateValue||Number(rateValue)<=0))throw new Error("Enter an hourly rate greater than $0 for a Car Concierge.");
+        const body={operation:"manage_portal_user",user_action:id?"update":"invite",profile_id:id||undefined,full_name:E.userFullName.value.trim(),email:E.userEmail.value.trim().toLowerCase(),role_codes:roles,default_hourly_rate:rateValue===""?null:Number(rateValue),active:true,commission_eligibility:selectedCommissionEligibility()};
+        const{data,error}=await supabaseClient.functions.invoke("sync-car-concierge-calendar",{body});if(error)throw error;if(!data?.ok)throw new Error(data?.error||"The portal user could not be saved.");
+        closeDialog(E.userDialog);setNotice(E.portalNotice,id?"Portal user, roles, rate, and commission eligibility updated.":"Portal invitation sent and commission eligibility saved.","success");await loadData();renderView();
+      }catch(err){setNotice(E.userFormNotice,err.message||"The portal user could not be saved.")}
+      finally{setLoading(E.saveUserButton,false,id?"Saving…":"Sending…",normal)}
+    }
+    function openArchiveUserDialog(id){
+      const user=state.profiles.get(id);if(!user)return;if(id===state.profile.id)throw new Error("You cannot archive your own portal account.");
+      E.archiveUserForm.reset();setNotice(E.archiveUserNotice,"");E.archiveUserProfileId.value=id;E.archiveUserSummary.textContent=`Archive ${user.full_name||user.email} and block portal sign-in.`;openDialog(E.archiveUserDialog);
+    }
+    async function archivePortalUser(event){
+      event.preventDefault();setLoading(E.confirmArchiveUserButton,true,"Archiving…","Archive User");setNotice(E.archiveUserNotice,"");
+      try{const body={operation:"manage_portal_user",user_action:"archive",profile_id:E.archiveUserProfileId.value,archive_reason:E.archiveUserReason.value.trim()};const{data,error}=await supabaseClient.functions.invoke("sync-car-concierge-calendar",{body});if(error)throw error;if(!data?.ok)throw new Error(data?.error||"The user could not be archived.");closeDialog(E.archiveUserDialog);setNotice(E.portalNotice,"Portal user archived and authentication access blocked.","success");await loadData();renderView()}catch(err){setNotice(E.archiveUserNotice,err.message||"The user could not be archived.")}finally{setLoading(E.confirmArchiveUserButton,false,"Archiving…","Archive User")}
+    }
+    async function restorePortalUser(id,button){
+      if(!confirm("Restore this user, reactivate their previous roles, and allow portal sign-in?"))return;const normal=button.textContent;setLoading(button,true,"Restoring…",normal);
+      try{const body={operation:"manage_portal_user",user_action:"restore",profile_id:id,restore_reason:"Restored from the Users & Rates portal."};const{data,error}=await supabaseClient.functions.invoke("sync-car-concierge-calendar",{body});if(error)throw error;if(!data?.ok)throw new Error(data?.error||"The user could not be restored.");setNotice(E.portalNotice,"Portal user restored and authentication access re-enabled.","success");await loadData();renderView()}catch(err){setNotice(E.portalNotice,err.message||"The user could not be restored.");button.disabled=false;button.textContent=normal}
+    }
+    function deleteBlockerMessage(blocker){
+      if(!blocker)return"Unknown blocker";if(blocker.message)return blocker.message;if(blocker.blocker==="historical_reference")return`${blocker.reference_count||0} historical reference(s) in ${blocker.table||"a protected table"}.`;return titleCase(blocker.blocker||"blocked");
+    }
+    async function assessDeletePortalUser(id,button){
+      const normal=button.textContent;setLoading(button,true,"Checking…",normal);
+      try{const{data,error}=await supabaseClient.functions.invoke("sync-car-concierge-calendar",{body:{operation:"manage_portal_user",user_action:"assess_delete",profile_id:id}});if(error)throw error;if(!data?.ok)throw new Error(data?.error||"Deletion eligibility could not be checked.");const assessment=data.assessment||{};if(assessment.can_delete!==true){const blockers=(assessment.blockers||[]).map(deleteBlockerMessage).join("\n• ");alert(`Permanent deletion is blocked.\n\n• ${blockers||"This account must be preserved."}`);button.disabled=false;button.textContent=normal;return}if(!confirm("This unused account passed every safety check. Permanently delete it from Supabase Auth and the portal? This cannot be undone.")){button.disabled=false;button.textContent=normal;return}const{data:deleteData,error:deleteError}=await supabaseClient.functions.invoke("sync-car-concierge-calendar",{body:{operation:"manage_portal_user",user_action:"delete",profile_id:id}});if(deleteError)throw deleteError;if(!deleteData?.ok)throw new Error(deleteData?.error||"The account could not be permanently deleted.");setNotice(E.portalNotice,"Unused portal account permanently deleted.","success");await loadData();renderView()}catch(err){setNotice(E.portalNotice,err.message||"Deletion eligibility could not be checked.");button.disabled=false;button.textContent=normal}
+    }
+
+    function openListingAgentDialog(id=null){E.listingAgentForm.reset();setNotice(E.listingAgentFormNotice,"");E.listingAgentId.value="";E.listingAgentProfile.innerHTML='<option value="">Not linked</option>'+[...state.profiles.values()].filter(p=>p.active&&!p.archived_at).map(p=>`<option value="${p.id}">${escapeHtml(p.full_name||p.email)}</option>`).join("");const a=id?state.listingAgents.get(id):null;if(a){E.listingAgentDialogTitle.textContent="Edit Sell Smart Agent";E.listingAgentId.value=a.id;E.listingAgentName.value=a.full_name||"";E.listingAgentPhone.value=a.phone||"";E.listingAgentEmail.value=a.email||"";E.listingAgentProfile.value=a.profile_id||"";E.listingAgentCalendar.value=a.google_calendar_id||"";E.listingAgentCanOrganize.checked=a.can_organize_showings!==false;E.listingAgentActive.checked=a.active!==false}else E.listingAgentDialogTitle.textContent="Add Sell Smart Agent";openDialog(E.listingAgentDialog)}
+    async function saveListingAgent(event){
+      event.preventDefault();
+      setLoading(E.saveListingAgentButton,true,"Saving…","Save Sell Smart Agent");
+      setNotice(E.listingAgentFormNotice,"");
+      try{
+        const id=E.listingAgentId.value;
+        const selectedProfileId=E.listingAgentProfile.value||null;
+        const selectedProfile=selectedProfileId?state.profiles.get(selectedProfileId):null;
+        const resolvedEmail=String(E.listingAgentEmail.value.trim()||selectedProfile?.email||"").trim().toLowerCase();
+        const payload={
+          full_name:E.listingAgentName.value.trim(),
+          phone:E.listingAgentPhone.value.trim(),
+          email:resolvedEmail||null,
+          profile_id:selectedProfileId,
+          google_calendar_id:E.listingAgentCalendar.value.trim()||null,
+          can_organize_showings:E.listingAgentCanOrganize.checked,
+          active:E.listingAgentActive.checked
+        };
+        if(!payload.full_name||!payload.phone)throw new Error("Name and phone are required.");
+        let saved;
+        if(id){
+          const{data,error}=await supabaseClient.from("car_concierge_listing_agents").update(payload).eq("id",id).select("*").single();
+          if(error)throw error;
+          saved=data
+        }else{
+          const{data,error}=await supabaseClient.from("car_concierge_listing_agents").insert(payload).select("*").single();
+          if(error)throw error;
+          saved=data
+        }
+        if(saved.profile_id){
+          const{error}=await supabaseClient.from("profile_roles").upsert({profile_id:saved.profile_id,role_code:"listing_agent",active:saved.active,assigned_by_profile_id:state.profile.id},{onConflict:"profile_id,role_code"});
+          if(error)throw error
+        }
+        closeDialog(E.listingAgentDialog);
+        setNotice(E.portalNotice,"Sell Smart Agent directory updated.","success");
+        await loadData();
+        renderView()
+      }catch(err){
+        setNotice(E.listingAgentFormNotice,err.message||"The Sell Smart Agent could not be saved.")
+      }finally{
+        setLoading(E.saveListingAgentButton,false,"Saving…","Save Sell Smart Agent")
+      }
+    }
+
+    async function claimOpenAssignment(id, version, button) {
+      const confirmed = confirm(
+        "Grab this assignment? It will be assigned to you and accepted immediately using your current default hourly rate."
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      setLoading(
+        button,
+        true,
+        "Claiming…",
+        "Grab Assignment"
+      );
+
+      let claimCompleted = false;
+
+      try {
+        const { data, error } = await supabaseClient.rpc(
+          "claim_open_car_concierge_assignment",
+          {
+            p_assignment_id: id,
+            p_request_version: Number(version)
+          }
+        );
+
+        if (error) {
+          throw error;
+        }
+
+        if (!data?.ok) {
+          throw new Error(
+            data?.error ||
+              "The assignment could not be claimed."
+          );
+        }
+
+        claimCompleted = true;
+
+        try {
+          const releaseResult = await releaseInvitations(id);
+
+          setNotice(
+            E.portalNotice,
+            releaseResult.invitation_release_status === "released"
+              ? "Assignment claimed. All calendar invitations were sent."
+              : "Assignment claimed, but one or more calendar invitations require a retry.",
+            releaseResult.invitation_release_status === "released"
+              ? "success"
+              : "error"
+          );
+        } catch (calendarError) {
+          console.error(calendarError);
+
+          setNotice(
+            E.portalNotice,
+            "Assignment claimed successfully, but the calendar invitations could not be released. Use Retry Calendar Invitations on the assignment card.",
+            "error"
+          );
+        }
+      } catch (error) {
+        setNotice(
+          E.portalNotice,
+          error.message ||
+            "The assignment could not be claimed. Refresh the open pool and try again."
+        );
+      } finally {
+        await loadData();
+        renderView();
+
+        if (!claimCompleted) {
+          button.disabled = false;
+          button.textContent = "Grab Assignment";
+        }
+      }
+    }
+
+    async function acceptAssignment(id,version,button){setLoading(button,true,"Accepting…","Accept Assignment");try{const{error}=await supabaseClient.rpc("accept_car_concierge_assignment",{p_assignment_id:id,p_request_version:Number(version)});if(error)throw error;const result=await releaseInvitations(id);setNotice(E.portalNotice,result.invitation_release_status==="released"?"Assignment accepted. All calendar invitations were sent.":"Assignment accepted, but one or more calendar invitations require a retry.",result.invitation_release_status==="released"?"success":"error");await loadData();renderView()}catch(err){setNotice(E.portalNotice,err.message||"The assignment could not be accepted.");button.disabled=false;button.textContent="Accept Assignment"}}
+    function openDecline(id,version){E.declineForm.reset();setNotice(E.declineFormNotice,"");E.declineAssignmentId.value=id;E.declineRequestVersion.value=version;openDialog(E.declineDialog)}
+    async function declineAssignment(event){event.preventDefault();setLoading(E.submitDeclineButton,true,"Declining…","Decline Assignment");setNotice(E.declineFormNotice,"");try{const explanation=E.declineExplanation.value.trim();const{data,error}=await supabaseClient.rpc("decline_car_concierge_assignment",{p_assignment_id:E.declineAssignmentId.value,p_request_version:Number(E.declineRequestVersion.value),p_explanation:explanation});if(error)throw error;if(data?.notification_id)await processNotification(data.notification_id);closeDialog(E.declineDialog);setNotice(E.portalNotice,"Assignment declined. The scheduler was notified.","success");await loadData();renderView()}catch(err){setNotice(E.declineFormNotice,err.message||"The assignment could not be declined.")}finally{setLoading(E.submitDeclineButton,false,"Declining…","Decline Assignment")}}
+    function openReassign(id){const a=state.assignments.find(x=>x.id===id);E.reassignForm.reset();setNotice(E.reassignFormNotice,"");E.reassignAssignmentId.value=id;E.reassignConcierge.innerHTML='<option value="">Select a different Car Concierge</option>'+activeConcierges().filter(p=>p.id!==a.concierge_id).map(p=>`<option value="${p.id}">${escapeHtml(p.full_name||p.email)}</option>`).join("");openDialog(E.reassignDialog)}
+    async function reassign(event){event.preventDefault();setLoading(E.submitReassignButton,true,"Reassigning…","Reassign and Send");setNotice(E.reassignFormNotice,"");try{const{data,error}=await supabaseClient.rpc("reassign_car_concierge_assignment",{p_assignment_id:E.reassignAssignmentId.value,p_new_concierge_id:E.reassignConcierge.value});if(error)throw error;if(data?.notification_id)await processNotification(data.notification_id);closeDialog(E.reassignDialog);setNotice(E.portalNotice,"The assignment was reassigned and the new Car Concierge was emailed.","success");await loadData();renderView()}catch(err){setNotice(E.reassignFormNotice,err.message||"The assignment could not be reassigned.")}finally{setLoading(E.submitReassignButton,false,"Reassigning…","Reassign and Send")}}
+
+    async function retryAppointment(id,type,button){const normal=button.textContent;setLoading(button,true,"Syncing…",normal);try{const{data,error}=await supabaseClient.functions.invoke("sync-car-concierge-calendar",{body:{operation:"sync_appointment",appointment_id:id,invite_type:type}});if(error)throw error;if(!data?.ok)throw new Error(data?.error||"Calendar sync failed.");setNotice(E.portalNotice,"Calendar invitation synchronized.","success");await loadData();renderView()}catch(err){setNotice(E.portalNotice,err.message||"Calendar sync failed.");button.disabled=false;button.textContent=normal}}
+    function openArchiveAssignmentDialog(id){
+      const assignment=state.assignments.find(item=>item.id===id);
+
+      if(!assignment){
+        setNotice(E.portalNotice,"Assignment not found.");
+        return;
+      }
+
+      if(!isManager()){
+        setNotice(E.portalNotice,"You are not authorized to archive assignments.");
+        return;
+      }
+
+      if(
+        assignment.started_at ||
+        ["in_progress","completed","ended","paid"].includes(assignment.status)
+      ){
+        setNotice(
+          E.portalNotice,
+          "This assignment cannot be archived because it has already started."
+        );
+        return;
+      }
+
+      E.archiveAssignmentForm.reset();
+      E.archiveAssignmentId.value=assignment.id;
+      E.archiveAssignmentSummary.innerHTML=`
+        <strong>Assignment #${escapeHtml(assignment.assignment_number)}</strong><br>
+        ${escapeHtml(
+          assignment.title ||
+          state.assignmentTypes.get(assignment.assignment_type_code) ||
+          "Assignment"
+        )}<br>
+        Status: ${escapeHtml(statusLabel(assignment.status))}
+      `;
+      setNotice(E.archiveAssignmentNotice,"");
+      openDialog(E.archiveAssignmentDialog);
+      setTimeout(()=>E.archiveAssignmentReason.focus(),50);
+    }
+
+    async function archiveAssignment(event){
+      event.preventDefault();
+
+      const id=E.archiveAssignmentId.value;
+      const reason=E.archiveAssignmentReason.value.trim();
+      const button=E.confirmArchiveAssignmentButton;
+      const normal=button.textContent;
+
+      setNotice(E.archiveAssignmentNotice,"");
+
+      if(!reason){
+        setNotice(E.archiveAssignmentNotice,"Enter a reason for archiving this assignment.");
+        E.archiveAssignmentReason.focus();
+        return;
+      }
+
+      setLoading(button,true,"Archiving…",normal);
+
+      try{
+        const assignment=state.assignments.find(item=>item.id===id);
+
+        if(!assignment){
+          throw new Error("Assignment not found.");
+        }
+
+        if(
+          assignment.started_at ||
+          ["in_progress","completed","ended","paid"].includes(assignment.status)
+        ){
+          throw new Error(
+            "This assignment cannot be archived because it has already started."
+          );
+        }
+
+        const{data,error}=await supabaseClient.rpc(
+          "archive_car_concierge_assignment",
+          {
+            p_assignment_id:id,
+            p_deleted_by_profile_id:state.profile.id,
+            p_reason:reason
+          }
+        );
+
+        if(error)throw error;
+        if(data?.ok===false){
+          throw new Error(data?.error||"The assignment could not be archived.");
+        }
+
+        closeDialog(E.archiveAssignmentDialog);
+        setNotice(
+          E.portalNotice,
+          `Assignment #${assignment.assignment_number} was archived and removed from active assignments.`,
+          "success"
+        );
+
+        await loadData();
+        renderView();
+      }catch(err){
+        console.error(err);
+        setNotice(
+          E.archiveAssignmentNotice,
+          err.message||"The assignment could not be archived."
+        );
+      }finally{
+        setLoading(button,false,"Archiving…",normal);
+      }
+    }
+
+    async function cancelAssignment(id,button){if(!confirm("Cancel this draft or pending assignment?"))return;const normal=button.textContent;setLoading(button,true,"Cancelling…",normal);try{const assignment=state.assignments.find(x=>x.id===id);if(!assignment||!["draft","pending_acceptance"].includes(assignment.status))throw new Error("Only a draft or pending-acceptance assignment can be cancelled from the portal right now.");const{error}=await supabaseClient.from("car_concierge_assignments").update({status:"cancelled"}).eq("id",id);if(error)throw error;setNotice(E.portalNotice,"Assignment cancelled. No calendar invitations had been released.","success");await loadData();renderView()}catch(err){setNotice(E.portalNotice,err.message||"The assignment could not be cancelled.");button.disabled=false;button.textContent=normal}}
+
+    function getLocation(){return new Promise((resolve,reject)=>{if(!navigator.geolocation){reject(new Error("This device does not support location services."));return}navigator.geolocation.getCurrentPosition(p=>resolve({latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy}),e=>reject(new Error(e.code===1?"Location permission is required.":"Your location could not be determined.")),{enableHighAccuracy:true,timeout:20000,maximumAge:0})})}
+    async function startAssignment(id,button){setLoading(button,true,"Getting Location…","Start Assignment");try{const loc=await getLocation();const{error}=await supabaseClient.rpc("start_assignment",{p_assignment_id:id,p_latitude:loc.latitude,p_longitude:loc.longitude,p_accuracy_meters:loc.accuracy});if(error)throw error;setNotice(E.portalNotice,"Assignment started. Your start location was recorded.","success");await loadData();renderView()}catch(err){setNotice(E.portalNotice,err.message||"The assignment could not be started.");button.disabled=false;button.textContent="Start Assignment"}}
+    async function endAssignment(id,button){if(!confirm("End this assignment now?"))return;setLoading(button,true,"Getting Location…","End Assignment");try{const loc=await getLocation();const{error}=await supabaseClient.rpc("end_assignment",{p_assignment_id:id,p_latitude:loc.latitude,p_longitude:loc.longitude,p_accuracy_meters:loc.accuracy});if(error)throw error;setNotice(E.portalNotice,"Assignment completed. Your end location was recorded.","success");await loadData();renderView()}catch(err){setNotice(E.portalNotice,err.message||"The assignment could not be ended.");button.disabled=false;button.textContent="End Assignment"}}
+
+    function openRatings(id){const c=completionFor(id)||{};E.ratingsAssignmentId.value=id;setNotice(E.ratingsFormNotice,"");const parts=[["interior","Interior",c.interior_rating,c.interior_notes],["exterior","Exterior",c.exterior_rating,c.exterior_notes],["frontTires","Front Tires",c.front_tires_rating,c.front_tires_notes],["rearTires","Rear Tires",c.rear_tires_rating,c.rear_tires_notes]];E.ratingsFields.innerHTML=parts.map(([key,label,r,n])=>`<div class="field"><label for="${key}Rating">${label} Rating</label><select id="${key}Rating" required><option value="">Select 1–10</option>${Array.from({length:10},(_,i)=>`<option value="${i+1}" ${Number(r)===i+1?"selected":""}>${i+1}</option>`).join("")}</select></div><div class="field"><label for="${key}Notes">${label} Notes</label><textarea id="${key}Notes">${escapeHtml(n||"")}</textarea></div>`).join("");openDialog(E.ratingsDialog)}
+    async function saveRatings(event){event.preventDefault();setLoading(E.saveRatingsButton,true,"Saving…","Save Ratings");setNotice(E.ratingsFormNotice,"");try{const read=k=>({rating:Number($(k+"Rating").value),notes:$(k+"Notes").value.trim()}),i=read("interior"),e=read("exterior"),f=read("frontTires"),r=read("rearTires");for(const[label,x]of[["Interior",i],["Exterior",e],["Front Tires",f],["Rear Tires",r]]){if(!Number.isInteger(x.rating)||x.rating<1||x.rating>10)throw new Error(`Select a valid ${label} rating.`);if(x.rating<=5&&!x.notes)throw new Error(`${label} notes are required for a rating of 5 or below.`)}const{error}=await supabaseClient.rpc("save_photo_video_ratings",{p_assignment_id:E.ratingsAssignmentId.value,p_interior_rating:i.rating,p_interior_notes:i.notes||null,p_exterior_rating:e.rating,p_exterior_notes:e.notes||null,p_front_tires_rating:f.rating,p_front_tires_notes:f.notes||null,p_rear_tires_rating:r.rating,p_rear_tires_notes:r.notes||null});if(error)throw error;closeDialog(E.ratingsDialog);setNotice(E.portalNotice,"Vehicle ratings saved.","success");await loadData();renderView()}catch(err){setNotice(E.ratingsFormNotice,err.message||"Ratings could not be saved.")}finally{setLoading(E.saveRatingsButton,false,"Saving…","Save Ratings")}}
+    async function openLiability(id,button){const popup=window.open(LIABILITY_FORM_URL,"_blank","noopener,noreferrer");const normal=button.textContent;setLoading(button,true,"Recording…",normal);try{const{error}=await supabaseClient.rpc("mark_liability_form_opened",{p_assignment_id:id});if(error)throw error;if(!popup)throw new Error("Allow pop-ups for the portal and try again.");setNotice(E.portalNotice,"Form link opened. Return after completion and confirm it.","success");await loadData();renderView()}catch(err){setNotice(E.portalNotice,err.message||"The form could not be opened.");button.disabled=false;button.textContent=normal}}
+    async function confirmLiability(id,button){if(!confirm("Confirm the Assumption of Liability form was completed and signed?"))return;const normal=button.textContent;setLoading(button,true,"Confirming…",normal);try{const{error}=await supabaseClient.rpc("confirm_liability_form_completed",{p_assignment_id:id});if(error)throw error;setNotice(E.portalNotice,"Liability form completion confirmed.","success");await loadData();renderView()}catch(err){setNotice(E.portalNotice,err.message||"Completion could not be confirmed.");button.disabled=false;button.textContent=normal}}
+    function openMail(id){const c=completionFor(id)||{};E.mailAssignmentId.value=id;E.mailCarrier.value=c.mail_carrier||"";E.mailTrackingNumber.value=c.mail_tracking_number||"";E.mailConfirm.checked=c.mailing_confirmed===true;setNotice(E.mailFormNotice,"");openDialog(E.mailDialog)}
+    async function saveMail(event){event.preventDefault();setLoading(E.saveMailButton,true,"Saving…","Save Mailing Details");setNotice(E.mailFormNotice,"");try{if(!E.mailCarrier.value||!E.mailTrackingNumber.value.trim()||!E.mailConfirm.checked)throw new Error("Select a carrier, enter tracking, and confirm mailing.");const{error}=await supabaseClient.rpc("save_mailing_check_details",{p_assignment_id:E.mailAssignmentId.value,p_carrier:E.mailCarrier.value,p_tracking_number:E.mailTrackingNumber.value.trim()});if(error)throw error;closeDialog(E.mailDialog);setNotice(E.portalNotice,"Mailing details saved.","success");await loadData();renderView()}catch(err){setNotice(E.mailFormNotice,err.message||"Mailing details could not be saved.")}finally{setLoading(E.saveMailButton,false,"Saving…","Save Mailing Details")}}
+
+    function openCost(id){E.costForm.reset();E.costAssignmentId.value=id;setNotice(E.costFormNotice,"");openDialog(E.costDialog)}
+    async function addCost(event) {
+      event.preventDefault();
+
+      setLoading(
+        E.saveCostButton,
+        true,
+        "Adding…",
+        "Add Approved Amount"
+      );
+
+      setNotice(E.costFormNotice, "");
+
+      try {
+        const amount = Number(E.costAmount.value);
+
+        if (!Number.isFinite(amount) || amount <= 0) {
+          throw new Error("Enter an amount greater than $0.");
+        }
+
+        const now = new Date().toISOString();
+
+        const { error } = await supabaseClient
+          .from("car_concierge_costs")
+          .insert({
+            assignment_id: E.costAssignmentId.value,
+            description: E.costDescription.value.trim(),
+            amount,
+            approved_amount: amount,
+            status: "approved",
+            notes: E.costNotes.value.trim() || null,
+            request_source: "admin_entry",
+            added_by: state.profile.id,
+            submitted_at: now,
+            approved_by: state.profile.id,
+            approved_at: now,
+            reviewed_at: now,
+            decision_notes: E.costNotes.value.trim() || null
+          });
+
+        if (error) throw error;
+
+        closeDialog(E.costDialog);
+
+        setNotice(
+          E.portalNotice,
+          "Approved amount added.",
+          "success"
+        );
+
+        await loadData();
+        renderView();
+      } catch (err) {
+        setNotice(
+          E.costFormNotice,
+          err.message || "Amount could not be added."
+        );
+      } finally {
+        setLoading(
+          E.saveCostButton,
+          false,
+          "Adding…",
+          "Add Approved Amount"
+        );
+      }
+    }
+    function openRequest(id){E.requestForm.reset();E.requestAssignmentId.value=id;setNotice(E.requestFormNotice,"");openDialog(E.requestDialog)}
+    async function requestAmount(event){event.preventDefault();setLoading(E.submitRequestButton,true,"Submitting…","Submit Request");setNotice(E.requestFormNotice,"");try{const{error}=await supabaseClient.rpc("request_additional_amount",{p_assignment_id:E.requestAssignmentId.value,p_description:E.requestDescription.value.trim(),p_amount:Number(E.requestAmount.value),p_notes:E.requestNotes.value.trim()||null});if(error)throw error;closeDialog(E.requestDialog);setNotice(E.portalNotice,"Additional amount request submitted.","success");await loadData();renderView()}catch(err){setNotice(E.requestFormNotice,err.message||"Request could not be submitted.")}finally{setLoading(E.submitRequestButton,false,"Submitting…","Submit Request")}}
+    function openReview(id,decision){const item=[...state.costsByAssignment.values()].flat().find(x=>x.id===id);if(!item)return;E.reviewForm.reset();E.reviewCostId.value=id;E.reviewDecision.value=decision;E.reviewDialogTitle.textContent=decision==="approved"?"Approve Additional Amount":"Deny Additional Amount";E.reviewDialogSummary.textContent=`${item.description} — ${formatMoney(item.amount)}`;E.submitReviewButton.textContent=decision==="approved"?"Approve Request":"Deny Request";setNotice(E.reviewFormNotice,"");openDialog(E.reviewDialog)}
+    async function reviewAmount(event){event.preventDefault();const decision=E.reviewDecision.value;setLoading(E.submitReviewButton,true,"Saving…",decision==="approved"?"Approve Request":"Deny Request");setNotice(E.reviewFormNotice,"");try{const{error}=await supabaseClient.rpc("review_additional_amount",{p_cost_id:E.reviewCostId.value,p_decision:decision,p_decision_notes:E.reviewNotes.value.trim()||null});if(error)throw error;closeDialog(E.reviewDialog);setNotice(E.portalNotice,`Request ${decision}.`,"success");await loadData();renderView()}catch(err){setNotice(E.reviewFormNotice,err.message||"Decision could not be saved.")}finally{setLoading(E.submitReviewButton,false,"Saving…",decision==="approved"?"Approve Request":"Deny Request")}}
+
+    E.sidebar.addEventListener("click",e=>{const b=e.target.closest("[data-nav]");if(!b)return;state.activeView=b.dataset.nav;renderView()});
+    E.portalContent.addEventListener("click",async e=>{const b=e.target.closest("button[data-action]");if(!b)return;const a=b.dataset.action,id=b.dataset.id;try{if(a==="refresh"){await loadData();renderView()}else if(a==="create-assignment")openAssignmentDialog();else if(a==="edit-assignment")openAssignmentDialog(id);else if(a==="send-acceptance"){setLoading(b,true,"Sending…","Send for Acceptance");await requestAcceptance(id);setNotice(E.portalNotice,"Assignment request emailed to the Car Concierge.","success");await loadData();renderView()}else if(a==="retry-notification"){setLoading(b,true,"Sending…","Retry Email");await processNotification(b.dataset.notificationId);setNotice(E.portalNotice,"Email sent.","success");await loadData();renderView()}else if(a==="claim-open-assignment")await claimOpenAssignment(id,b.dataset.version,b);else if(a==="accept-assignment")await acceptAssignment(id,b.dataset.version,b);else if(a==="open-decline")openDecline(id,b.dataset.version);else if(a==="open-reassign")openReassign(id);else if(a==="release-invites"){setLoading(b,true,"Sending…","Release or Retry Invitations");const result=await releaseInvitations(id);setNotice(E.portalNotice,result.invitation_release_status==="released"?"All invitations were sent.":"Some invitations still require attention.",result.invitation_release_status==="released"?"success":"error");await loadData();renderView()}else if(a==="retry-appointment")await retryAppointment(id,b.dataset.inviteType,b);else if(a==="cancel-assignment")await cancelAssignment(id,b);else if(a==="open-archive-assignment")openArchiveAssignmentDialog(id);else if(a==="add-user")openUserDialog();else if(a==="filter-users"){state.userStatusFilter=b.dataset.filter==="archived"?"archived":"active";renderUsers()}else if(a==="edit-user")openUserDialog(id);else if(a==="open-archive-user")openArchiveUserDialog(id);else if(a==="restore-user")await restorePortalUser(id,b);else if(a==="assess-delete-user")await assessDeletePortalUser(id,b);else if(a==="add-listing-agent")openListingAgentDialog();else if(a==="edit-listing-agent")openListingAgentDialog(id);else if(a==="start-assignment")await startAssignment(id,b);else if(a==="end-assignment")await endAssignment(id,b);else if(a==="ratings")openRatings(id);else if(a==="open-liability")await openLiability(id,b);else if(a==="confirm-liability")await confirmLiability(id,b);else if(a==="mail-details")openMail(id);else if(a==="add-cost")openCost(id);else if(a==="request-amount")openRequest(id);else if(a==="review-request")openReview(b.dataset.costId,b.dataset.decision)}catch(err){console.error(err);setNotice(E.portalNotice,err.message||"The request could not be completed.");if(b){b.disabled=false}}});
+    document.addEventListener("click",e=>{const b=e.target.closest("[data-close-dialog]");if(!b)return;const d=$(b.dataset.closeDialog);if(d)closeDialog(d)});document.querySelectorAll("dialog").forEach(d=>d.addEventListener("click",e=>{if(e.target===d)closeDialog(d)}));
+    E.assignmentType.addEventListener("change",()=>{renderDynamicForm(E.assignmentType.value);if(!E.assignmentTitle.value.trim())E.assignmentTitle.value=defaultParentTitle(E.assignmentType.value)});E.assignmentConcierge.addEventListener("change",updateRate);E.assignmentVehicle.addEventListener("input",()=>{if(!E.assignmentTitle.value.trim())E.assignmentTitle.value=defaultParentTitle(E.assignmentType.value)});E.generateTitlesButton.addEventListener("click",setSuggestedTitles);E.assignmentDynamicFields.addEventListener("change",e=>{if(e.target?.id==="programType")toggleClosingFields()});
+    E.assignmentForm.addEventListener("submit",saveAssignment);
+    E.archiveAssignmentForm.addEventListener("submit",archiveAssignment);E.passwordSetupForm.addEventListener("submit",savePortalPassword);E.userForm.addEventListener("submit",savePortalUser);E.userForm.addEventListener("change",e=>{if(e.target?.matches("[data-user-role]"))updateUserRoleDependentFields()});E.archiveUserForm.addEventListener("submit",archivePortalUser);E.listingAgentForm.addEventListener("submit",saveListingAgent);E.listingAgentProfile.addEventListener("change",()=>{const profile=state.profiles.get(E.listingAgentProfile.value);if(profile?.email){E.listingAgentEmail.value=profile.email;if(!E.listingAgentCalendar.value.trim())E.listingAgentCalendar.value=profile.email}});E.declineForm.addEventListener("submit",declineAssignment);E.reassignForm.addEventListener("submit",reassign);E.costForm.addEventListener("submit",addCost);E.requestForm.addEventListener("submit",requestAmount);E.reviewForm.addEventListener("submit",reviewAmount);E.ratingsForm.addEventListener("submit",saveRatings);E.mailForm.addEventListener("submit",saveMail);
+    E.loginForm.addEventListener("submit",async e=>{e.preventDefault();setNotice(E.loginNotice,"");setLoading(E.loginButton,true,"Signing In…","Sign In");try{const f=new FormData(E.loginForm),email=String(f.get("email")||"").trim(),password=String(f.get("password")||"");const{error}=await supabaseClient.auth.signInWithPassword({email,password});if(error)throw error;E.loginForm.reset();await loadPortal()}catch(err){setNotice(E.loginNotice,err.message||"Sign-in failed.")}finally{setLoading(E.loginButton,false,"Signing In…","Sign In")}});E.signOutButton.addEventListener("click",async()=>{E.signOutButton.disabled=true;try{await supabaseClient.auth.signOut()}finally{state.user=null;state.profile=null;E.signOutButton.disabled=false;showLogin()}});supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_OUT"||!session)showLogin();else if((event==="PASSWORD_RECOVERY"||PASSWORD_SETUP_REQUESTED)&&!E.passwordSetupDialog.open)openPasswordSetup()});
+    (async()=>{try{const{data,error}=await supabaseClient.auth.getSession();if(error)throw error;if(data.session&&PASSWORD_SETUP_REQUESTED)openPasswordSetup();else if(data.session)await loadPortal();else showLogin()}catch(err){showLogin();setNotice(E.loginNotice,err.message||"The portal could not be loaded.")}})();
+  </script>
+</body>
+</html>
