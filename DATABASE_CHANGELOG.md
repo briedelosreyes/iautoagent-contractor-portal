@@ -45,7 +45,22 @@ This file tracks every production database change made to the iAutoAgent Contrac
 | 35G | Synchronize Reassigned Client Calendar Titles | Calendar Automation | Verified | 2026-07-19 | Brie Delos Reyes |
 | 35I | Automatic Assignment Acceptance Notifications | Notification Automation | Verified | 2026-07-19 | Brie Delos Reyes |
 | 35J | Backfill Assignment #8 Acceptance Confirmation | Data Correction | Completed | 2026-07-19 | Brie Delos Reyes |
-| 36 | Assignment Soft Delete and Calendar Removal | Functions and Automation | Planned | — | — |
+| 36A | Calendar Synchronization Architecture Foundation | Calendar Automation | Verified | 2026-07-22 | Brie Delos Reyes |
+| 36A.2 | Calendar Queue and Registry Foundation | Calendar Automation | Verified | 2026-07-22 | Brie Delos Reyes |
+| 36B | Calendar Worker Queue Processing Foundation | Calendar Automation | Verified | 2026-07-22 | Brie Delos Reyes |
+| 36C.1 | Calendar Create Synchronization | Calendar Automation | Verified | 2026-07-22 | Brie Delos Reyes |
+| 36C.2 | Calendar Update Synchronization | Calendar Automation | Verified | 2026-07-22 | Brie Delos Reyes |
+| 36C.3 | Calendar Cancel Synchronization | Calendar Automation | Verified | 2026-07-22 | Brie Delos Reyes |
+| 36C.4 | Calendar Queue Idempotency and Retry Integration | Calendar Automation | Verified | 2026-07-22 | Brie Delos Reyes |
+| 36D.1 | Calendar Registry Protection | Calendar Security | Verified | 2026-07-22 | Brie Delos Reyes |
+| 36D.2 | Calendar Queue Validation and Processing Controls | Calendar Security | Verified | 2026-07-22 | Brie Delos Reyes |
+| 36D.3 | Portal Role Compatibility Correction | Security | Verified | 2026-07-22 | Brie Delos Reyes |
+| 36D.5 | Calendar Queue Reliability Improvements | Calendar Automation | Verified | 2026-07-22 | Brie Delos Reyes |
+| 36D.6 | Calendar Worker Service Role Permission Support | Permissions | Verified | 2026-07-22 | Brie Delos Reyes |
+| 36D.7 | Calendar Worker Payroll Permission Support | Permissions | Verified | 2026-07-22 | Brie Delos Reyes |
+| 36D.10 | Calendar Registry Append-Only Audit Compatibility Fix | Calendar Security | Verified | 2026-07-22 | Brie Delos Reyes |
+| 36D.11 | Car Concierge Payroll Items Service Role Permission Fix | Permissions | Verified | 2026-07-23 | Brie Delos Reyes |
+| 36D.12 | Car Concierge Payroll Runs Service Role Permission Fix | Permissions | Verified | 2026-07-23 | Brie Delos Reyes |
 | 37 | Payroll Notification Outbox Events | Automation | Planned | — | — |
 
 ------
@@ -537,7 +552,8 @@ Use this checklist for every schema-changing query.
 # Notes
 
 - The migration register is the authoritative sequence for future SQL query numbering.
-- Query 30 is the next schema migration.
+- The latest verified migration is `36D.12`.
+- The next available migration number is `36D.13`.
 - Inspection queries remain documented even when they do not modify the database.
 - Do not mark planned queries as applied until they have been successfully run in Supabase.
 
@@ -1184,3 +1200,484 @@ Related corrections:
 
 Final result:
 Open-pool reassignment now works automatically from decline through claim, calendar synchronization, and scheduler notification.
+
+---
+
+# Version 2 Calendar Synchronization Architecture
+
+## Query 36A — Calendar Synchronization Architecture Foundation
+
+**Status:** Verified  
+**Category:** Calendar Automation  
+**Applied Date:** 2026-07-22  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Established the Version 2 calendar synchronization architecture used to separate queue creation from Google Calendar API processing.
+
+### Result
+
+Prepared the portal for:
+
+- Queue-driven synchronization
+- Dedicated worker processing
+- Retry-safe operations
+- Idempotent create, update, and cancel actions
+- Independent tracking of calendar synchronization state
+
+---
+
+## Query 36A.2 — Calendar Queue and Registry Foundation
+
+**Status:** Verified  
+**Category:** Calendar Automation  
+**Applied Date:** 2026-07-22  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Added the queue and registry foundation required for dedicated calendar synchronization processing.
+
+### Preserved
+
+- Existing assignment ownership
+- Existing acceptance workflow
+- Existing calendar records
+- Existing audit history
+
+---
+
+## Query 36B — Calendar Worker Queue Processing Foundation
+
+**Status:** Verified  
+**Category:** Calendar Automation  
+**Applied Date:** 2026-07-22  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Implemented queue claiming and processing support for the dedicated calendar worker.
+
+### Verification
+
+- Queue records could be claimed.
+- Successful records were marked complete.
+- Failed records retained retry information.
+- Empty queue runs completed without errors.
+
+---
+
+## Query 36C.1 — Calendar Create Synchronization
+
+**Status:** Verified  
+**Category:** Calendar Automation  
+**Applied Date:** 2026-07-22  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Implemented calendar CREATE processing for assignment invitations.
+
+### Required Email Behavior
+
+```text
+sendUpdates=all
+```
+
+### Verification
+
+- Client event creation succeeded.
+- Car Concierge event creation succeeded.
+- Invitations were sent.
+- Calendar registry records were persisted.
+
+---
+
+## Query 36C.2 — Calendar Update Synchronization
+
+**Status:** Verified  
+**Category:** Calendar Automation  
+**Applied Date:** 2026-07-22  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Implemented calendar UPDATE processing for existing assignment events.
+
+### Required Email Behavior
+
+```text
+sendUpdates=none
+```
+
+### Verification
+
+- Existing events updated successfully.
+- No duplicate events were created.
+- Existing event identifiers were preserved.
+- Update emails were not resent.
+
+---
+
+## Query 36C.3 — Calendar Cancel Synchronization
+
+**Status:** Verified  
+**Category:** Calendar Automation  
+**Applied Date:** 2026-07-22  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Implemented calendar CANCEL processing for assignment events.
+
+### Required Email Behavior
+
+```text
+sendUpdates=all
+```
+
+### Verification
+
+- Cancellation processing succeeded.
+- Recipient cancellation notices were enabled.
+- Registry status updates were preserved.
+- Processing remained retry-safe.
+
+---
+
+## Query 36C.4 — Calendar Queue Idempotency and Retry Integration
+
+**Status:** Verified  
+**Category:** Calendar Automation  
+**Applied Date:** 2026-07-22  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Integrated create, update, and cancel actions with duplicate prevention and safe retry behavior.
+
+### Verification
+
+- Duplicate queue records did not create duplicate calendar events.
+- Successful synchronization could be retried safely.
+- Queue completion did not reverse assignment ownership.
+- Calendar failures remained recoverable.
+
+---
+
+## Query 36D.1 — Calendar Registry Protection
+
+**Status:** Verified  
+**Category:** Calendar Security  
+**Applied Date:** 2026-07-22  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Protected calendar registry records from unauthorized or destructive modification.
+
+### Preserved
+
+- Historical calendar identifiers
+- Synchronization state
+- Assignment association
+- Auditability
+
+---
+
+## Query 36D.2 — Calendar Queue Validation and Processing Controls
+
+**Status:** Verified  
+**Category:** Calendar Security  
+**Applied Date:** 2026-07-22  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Added queue-processing validation and integrity controls.
+
+### Verification
+
+- Invalid processing states were blocked.
+- Completed queue records were not reprocessed improperly.
+- Worker execution remained retry-safe.
+
+---
+
+## Query 36D.3 — Portal Role Compatibility Correction
+
+**Status:** Verified  
+**Category:** Security  
+**Applied Date:** 2026-07-22  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Corrected the authorization implementation to use:
+
+```sql
+portal_actor_has_role(...)
+```
+
+### Result
+
+Restored compatibility with the production role model introduced by Query 33.
+
+### Authoritative Version
+
+The corrected `portal_actor_has_role(...)` version is authoritative. The earlier Query 36D.3 draft is superseded.
+
+---
+
+## Query 36D.5 — Calendar Queue Reliability Improvements
+
+**Status:** Verified  
+**Category:** Calendar Automation  
+**Applied Date:** 2026-07-22  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Improved queue-processing reliability and consistency.
+
+### Preserved
+
+- Assignment ownership
+- Retry history
+- Audit history
+- Calendar identifiers
+- Existing calendar email behavior
+
+---
+
+## Query 36D.6 — Calendar Worker Service Role Permission Support
+
+**Status:** Verified  
+**Category:** Permissions  
+**Applied Date:** 2026-07-22  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Granted the trusted Supabase service role the permissions required by the dedicated calendar worker.
+
+### Security Note
+
+Permissions apply only to trusted server-side execution. Anonymous and ordinary authenticated-user access was not expanded.
+
+---
+
+## Query 36D.7 — Calendar Worker Payroll Permission Support
+
+**Status:** Verified  
+**Category:** Permissions  
+**Applied Date:** 2026-07-22  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Added payroll-related service-role access required by calendar synchronization processing.
+
+### Result
+
+The synchronization workflow advanced beyond the initial payroll persistence permission boundary.
+
+---
+
+## Query 36D.10 — Calendar Registry Append-Only Audit Compatibility Fix
+
+**Status:** Verified  
+**Category:** Calendar Security  
+**Applied Date:** 2026-07-22  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Resolved conflicts between calendar-worker processing and append-only calendar audit protections.
+
+### Preserved
+
+- Append-only audit history
+- Started-assignment protections
+- Existing synchronization history
+- Calendar event ownership
+- Existing calendar email behavior
+
+### Result
+
+Calendar processing completed without weakening audit safeguards.
+
+---
+
+## Query 36D.11 — Car Concierge Payroll Items Service Role Permission Fix
+
+**Status:** Verified  
+**Category:** Permissions  
+**Applied Date:** 2026-07-23  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Granted the Supabase `service_role` the access required for:
+
+```text
+public.car_concierge_payroll_items
+```
+
+### Permissions Granted
+
+- `SELECT`
+- `INSERT`
+- `UPDATE`
+
+### Error Resolved
+
+```text
+permission denied for table car_concierge_payroll_items
+```
+
+### Verification
+
+After applying the migration, the assignment synchronization workflow advanced to the next processing stage.
+
+### Security Note
+
+No anonymous or ordinary authenticated-user access was expanded.
+
+---
+
+## Query 36D.12 — Car Concierge Payroll Runs Service Role Permission Fix
+
+**Status:** Verified  
+**Category:** Permissions  
+**Applied Date:** 2026-07-23  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Granted the Supabase `service_role` the access required for:
+
+```text
+public.car_concierge_payroll_runs
+```
+
+### Permissions Granted
+
+- `SELECT`
+- `INSERT`
+- `UPDATE`
+
+### Error Resolved
+
+```text
+permission denied for table car_concierge_payroll_runs
+```
+
+### Final Verification
+
+The portal returned:
+
+```text
+Assignment #12 was updated and the calendar invitations were synchronized.
+```
+
+This confirmed:
+
+- `sync-car-concierge-calendar` completed successfully.
+- Payroll-item persistence succeeded.
+- Payroll-run persistence succeeded.
+- Calendar synchronization succeeded.
+- No calendar worker modification was required.
+- Calendar email behavior remained unchanged.
+- Append-only protections remained active.
+- Started-assignment protections remained active.
+
+---
+
+# Dedicated Calendar Worker Deployment
+
+**Status:** Verified in Production  
+**Date:** 2026-07-22
+
+## Edge Function
+
+```text
+calendar-sync-worker
+```
+
+A Version 2 worker deployment was verified during production testing.
+
+## Security Configuration
+
+- JWT verification disabled for the worker endpoint.
+- `CALENDAR_WORKER_SECRET` configured.
+- Requests authenticated using:
+
+```text
+x-calendar-worker-secret
+```
+
+## Verified Worker Results
+
+A successful worker run returned:
+
+- One queue record claimed
+- One queue record succeeded
+- Zero failures
+
+A subsequent empty-queue run returned:
+
+- Zero queue records claimed
+- Zero failures
+
+## Confirmed Behavior
+
+- Queue processing works.
+- Duplicate prevention works.
+- Retry behavior works.
+- Post-sync persistence works.
+- Worker authentication works.
+- Empty queue processing works.
+- Calendar email behavior remains unchanged.
+
+---
+
+# Current Production Status
+
+The following major portal capabilities are active:
+
+- Assignment lifecycle tracking
+- Assignment event history
+- Internal assignment notes
+- Late-cancellation pay calculation
+- Additional-cost approval tracking
+- Payroll period generation
+- Payroll run calculation and review
+- Role-based access control
+- User archiving
+- Commission eligibility controls
+- Open Assignment Pool
+- Atomic assignment claiming
+- Scheduler acceptance notifications
+- Queue-driven Google Calendar synchronization
+- Dedicated calendar worker
+- Duplicate calendar-event prevention
+- Calendar retry support
+- Append-only calendar audit protection
+- Started-assignment protection
+- Portal assignment edit and calendar synchronization
+
+## Current Calendar Email Rules
+
+| Action | Google Calendar Setting |
+|---|---|
+| CREATE | `sendUpdates=all` |
+| UPDATE | `sendUpdates=none` |
+| CANCEL | `sendUpdates=all` |
+
+## Current Migration Position
+
+- Latest verified migration: `36D.12`
+- Next available migration: `36D.13`
+- Existing migration numbers must not be reused or renumbered.
