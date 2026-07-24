@@ -61,10 +61,11 @@ This file tracks every production database change made to the iAutoAgent Contrac
 | 36D.10 | Calendar Registry Append-Only Audit Compatibility Fix | Calendar Security | Verified | 2026-07-22 | Brie Delos Reyes |
 | 36D.11 | Car Concierge Payroll Items Service Role Permission Fix | Permissions | Verified | 2026-07-23 | Brie Delos Reyes |
 | 36D.12 | Car Concierge Payroll Runs Service Role Permission Fix | Permissions | Verified | 2026-07-23 | Brie Delos Reyes |
-| 37.20 | Create Payroll Notification Outbox Foundation | Payroll Automation | Verified | 2026-07-24 | Brie Delos Reyes |
 | 37 | Payroll Notification Outbox Events | Automation | Superseded | — | — |
 | 37.18 | Payroll Workflow and Notification Architecture Inspection | Inspection | Completed | 2026-07-24 | Brie Delos Reyes |
 | 37.19 | Final Payroll Notification and RPC Inspection | Inspection | Completed | 2026-07-24 | Brie Delos Reyes |
+| 37.20 | Create Payroll Notification Outbox Foundation | Payroll Automation | Verified | 2026-07-24 | Brie Delos Reyes |
+| 38 | Create Payroll Notification Enqueue Function | Payroll Automation | Verified | 2026-07-24 | Brie Delos Reyes |
 
 ------
 
@@ -713,6 +714,50 @@ The dedicated payroll notification outbox foundation is active and verified in p
 
 ---
 
+## 38 – Create Payroll Notification Enqueue Function
+
+**Status:** Verified  
+**Category:** Payroll Automation  
+**Applied Date:** 2026-07-24  
+**Applied By:** Brie Delos Reyes
+
+### Purpose
+
+Create the trusted internal enqueue function used by payroll workflow RPCs to place notifications into `payroll_notification_outbox`.
+
+### Function
+
+```sql
+enqueue_car_concierge_payroll_notification(uuid, text, text)
+```
+
+### Verification
+
+- Function created
+- SECURITY DEFINER enabled
+- `anon` execute revoked
+- `authenticated` execute revoked
+- `service_role` execute granted
+- Supports:
+  - payroll_submitted
+  - payroll_resubmitted
+  - payroll_approved
+  - payroll_rejected
+  - payroll_on_hold
+- Assignment notification outbox unchanged
+
+### Execution result
+
+```text
+{"migration":"Create Payroll Notification Enqueue Function","anon_execute":false,"function_created":true,"security_definer":true,"service_role_execute":true,"authenticated_execute":false,"supported_notification_types":["payroll_submitted","payroll_resubmitted","payroll_approved","payroll_rejected","payroll_on_hold"],"assignment_notification_outbox_modified":false}
+```
+
+### Final result
+
+The enqueue function is active and verified. Integration into the payroll workflow RPCs is scheduled for Query 39.
+
+---
+
 # Deployment Checklist Template
 
 Use this checklist for every schema-changing query.
@@ -748,6 +793,7 @@ Use this checklist for every schema-changing query.
 | 2026-07 | 28 | Assignment retrieval and calendar-sync permission test | Passed | Brie |
 | 2026-07 | 29 | Calendar issue review | Query unnecessary; incorrect date identified | Brie |
 | 2026-07-24 | 37.20 | Payroll notification outbox foundation verification | Passed; table, RLS, statuses, notification types, and assignment-outbox isolation confirmed | Brie Delos Reyes |
+| 2026-07-24 | 38 | Payroll notification enqueue function verification | Passed; function creation, SECURITY DEFINER, execute permissions, supported notification types, and assignment-outbox isolation confirmed | Brie Delos Reyes |
 
 ---
 
@@ -762,9 +808,9 @@ Use this checklist for every schema-changing query.
 # Notes
 
 - The migration register is the authoritative sequence for future SQL query numbering.
-- The latest verified production migration is `37.20`.
+- The latest verified production migration is `38`.
 - Inspection Queries `37.18` and `37.19` are completed and read-only.
-- The next planned migration is `38 – Create Payroll Notification Enqueue Function`.
+- The next planned migration is `39 – Integrate Payroll Notification Enqueue into Payroll Workflow RPCs`.
 - Query 37 is superseded and must not be reused.
 - Inspection queries remain documented even when they do not modify the database.
 - Do not mark planned queries as applied until they have been successfully run in Supabase.
@@ -1890,8 +1936,8 @@ The following major portal capabilities are active:
 
 ## Current Migration Position
 
-- Latest verified production migration: `37.20`
+- Latest verified production migration: `38`
 - Completed inspection queries: `37.18` and `37.19`
-- Next planned migration: `38 – Create Payroll Notification Enqueue Function`
+- Next planned migration: `39 – Integrate Payroll Notification Enqueue into Payroll Workflow RPCs`
 - Query 37 is superseded and must not be reused.
 - Existing migration and inspection query numbers must not be reused or renumbered.
