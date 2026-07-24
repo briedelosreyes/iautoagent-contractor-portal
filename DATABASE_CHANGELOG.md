@@ -61,7 +61,10 @@ This file tracks every production database change made to the iAutoAgent Contrac
 | 36D.10 | Calendar Registry Append-Only Audit Compatibility Fix | Calendar Security | Verified | 2026-07-22 | Brie Delos Reyes |
 | 36D.11 | Car Concierge Payroll Items Service Role Permission Fix | Permissions | Verified | 2026-07-23 | Brie Delos Reyes |
 | 36D.12 | Car Concierge Payroll Runs Service Role Permission Fix | Permissions | Verified | 2026-07-23 | Brie Delos Reyes |
-| 37 | Payroll Notification Outbox Events | Automation | Planned | — | — |
+| 36D.13 | Dedicated Payroll Notification Outbox Foundation | Payroll Automation | Planned | — | — |
+| 37 | Payroll Notification Outbox Events | Automation | Superseded | — | — |
+| 37.18 | Payroll Workflow and Notification Architecture Inspection | Inspection | Completed | 2026-07-24 | Brie Delos Reyes |
+| 37.19 | Final Payroll Notification and RPC Inspection | Inspection | Completed | 2026-07-24 | Brie Delos Reyes |
 
 ------
 
@@ -480,27 +483,192 @@ Deletion must not be used instead of cancellation.
 
 ## Query 37 — Payroll Notification Outbox Events
 
-**Status:** Planned  
+**Status:** Superseded  
 **Category:** Automation
 
-### Planned notifications
+### Original intent
+
+This planned query was intended to add payroll workflow notifications using the existing notification infrastructure.
+
+### Reason superseded
+
+Queries 37.18 and 37.19 confirmed that `contractor_notification_outbox` is assignment-specific and cannot safely support payroll notifications without redesigning the existing assignment notification workflow.
+
+The current table requires:
+
+- `assignment_id`
+- `request_version`
+- An assignment-specific `notification_type`
+
+The existing notification-type constraint permits only:
+
+- `assignment_request`
+- `assignment_declined`
+- `assignment_accepted`
+
+Payroll notifications are not assignment-based and should not be forced into this structure.
+
+### Replacement
+
+The implementation will continue under:
+
+`Query 36D.13 — Dedicated Payroll Notification Outbox Foundation`
+
+No production database change was made under Query 37.
+
+---
+
+## Query 37.18 — Payroll Workflow and Notification Architecture Inspection
+
+**Status:** Completed  
+**Category:** Inspection  
+**Completed Date:** 2026-07-24  
+**Completed By:** Brie Delos Reyes
+
+### Purpose
+
+Inspect the existing payroll tables, payroll lifecycle protections, payroll event history, role authorization, and notification infrastructure before implementing payroll workflow notifications.
+
+### Confirmed findings
+
+- Payroll submission already exists.
+- Payroll review already exists.
+- Submission comments are already supported.
+- Review comments are already supported.
+- Payroll events already preserve workflow notes and metadata.
+- Finalized payroll runs and items are protected from unauthorized edits.
+- Payroll table access is controlled through authorized functions and existing RLS policies.
+- The existing notification outbox is used by assignment-related workflows.
+
+### Database impact
+
+Read-only inspection. No schema or data changes.
+
+---
+
+## Query 37.19 — Final Payroll Notification and RPC Inspection
+
+**Status:** Completed  
+**Category:** Inspection  
+**Completed Date:** 2026-07-24  
+**Completed By:** Brie Delos Reyes
+
+### Purpose
+
+Confirm the exact payroll RPC signatures and determine whether the existing contractor notification outbox could safely support payroll notifications.
+
+### RPC signatures confirmed
+
+`submit_car_concierge_payroll_run(uuid, text)`
+
+- Accepts `p_payroll_run_id`.
+- Accepts optional `p_notes`.
+- Returns `jsonb`.
+
+`review_car_concierge_payroll_run(uuid, text, text)`
+
+- Accepts `p_payroll_run_id`.
+- Accepts `p_decision`.
+- Accepts optional `p_notes`.
+- Returns `jsonb`.
+
+`write_car_concierge_payroll_event(...)`
+
+- Supports payroll run and payroll item event logging.
+- Supports previous and new status values.
+- Supports actor identity and role.
+- Supports amount, notes, and structured metadata.
+
+### Notification architecture findings
+
+The existing `contractor_notification_outbox` requires:
+
+- `assignment_id`
+- `request_version`
+- `recipient_email`
+- Assignment-specific duplicate protection
+
+Its notification-type constraint supports only:
+
+- `assignment_request`
+- `assignment_declined`
+- `assignment_accepted`
+
+### Decision
+
+Do not modify or repurpose the existing assignment notification outbox for payroll.
+
+Create a dedicated payroll notification outbox under Query 36D.13.
+
+### Database impact
+
+Read-only inspection. No schema or data changes.
+
+---
+
+## Query 36D.13 — Dedicated Payroll Notification Outbox Foundation
+
+**Status:** Planned  
+**Category:** Payroll Automation
+
+### Purpose
+
+Create payroll-specific notification infrastructure without changing the existing assignment notification workflow.
+
+### Planned notification events
 
 | Trigger | Recipient |
 |---|---|
-| Projected payout submitted | Client Services Director |
-| Projection approved | Submitting Payroll Team member |
-| Projection rejected | Submitting Payroll Team member |
-| Projection placed on hold | Submitting Payroll Team member |
-| Projection revised and resubmitted | Client Services Director |
+| Payroll submitted for approval | Client Services Director |
+| Payroll approved | Submitting Payroll Team member |
+| Payroll rejected | Submitting Payroll Team member |
+| Payroll placed on hold | Submitting Payroll Team member |
+| Payroll revised and resubmitted | Client Services Director |
+| ACH payout initiated | Applicable payroll recipient or operational recipient, subject to final workflow design |
+| Payroll marked paid | Applicable payroll recipient or operational recipient, subject to final workflow design |
 
-### Requirements
+### Planned requirements
 
-- Duplicate protection
+- Dedicated `payroll_notification_outbox`
+- Payroll-run association
+- Notification type
+- Sender and recipient tracking
+- Recipient email
+- Email subject
+- Structured payload
 - Delivery status
+- Attempt count
+- Last error
+- Created timestamp
 - Sent timestamp
-- Recipient tracking
-- Error logging
-- Retry support
+- Duplicate protection
+- Retry-safe processing
+- Service-role worker access
+- No expansion of anonymous or ordinary authenticated-user permissions
+- No impact to assignment notifications
+
+### Email identification rule
+
+Payroll emails must use the payroll period end date rather than the payroll run number.
+
+Date format:
+
+`DD MMMM YYYY`
+
+Examples:
+
+- `Payroll Approval Required — 31 July 2026`
+- `Payroll Approved — 31 July 2026`
+
+### Existing workflow support
+
+No new comment columns are required because the current RPCs already accept optional notes.
+
+No new payroll audit table is required because `write_car_concierge_payroll_event(...)` already stores workflow notes and metadata.
+
+### Deployment status
+
+Do not mark this query `Applied` until it has run successfully in Supabase.
 
 ---
 
@@ -552,8 +720,10 @@ Use this checklist for every schema-changing query.
 # Notes
 
 - The migration register is the authoritative sequence for future SQL query numbering.
-- The latest verified migration is `36D.12`.
-- The next available migration number is `36D.13`.
+- The latest verified production migration is `36D.12`.
+- Inspection Queries `37.18` and `37.19` are completed and read-only.
+- The next available schema-changing migration number is `36D.13`.
+- Query 37 is superseded and must not be reused.
 - Inspection queries remain documented even when they do not modify the database.
 - Do not mark planned queries as applied until they have been successfully run in Supabase.
 
@@ -1678,6 +1848,8 @@ The following major portal capabilities are active:
 
 ## Current Migration Position
 
-- Latest verified migration: `36D.12`
-- Next available migration: `36D.13`
-- Existing migration numbers must not be reused or renumbered.
+- Latest verified production migration: `36D.12`
+- Completed inspection queries: `37.18` and `37.19`
+- Next available schema-changing migration: `36D.13`
+- Query 37 is superseded and must not be reused.
+- Existing migration and inspection query numbers must not be reused or renumbered.
