@@ -61,7 +61,7 @@ This file tracks every production database change made to the iAutoAgent Contrac
 | 36D.10 | Calendar Registry Append-Only Audit Compatibility Fix | Calendar Security | Verified | 2026-07-22 | Brie Delos Reyes |
 | 36D.11 | Car Concierge Payroll Items Service Role Permission Fix | Permissions | Verified | 2026-07-23 | Brie Delos Reyes |
 | 36D.12 | Car Concierge Payroll Runs Service Role Permission Fix | Permissions | Verified | 2026-07-23 | Brie Delos Reyes |
-| 36D.13 | Dedicated Payroll Notification Outbox Foundation | Payroll Automation | Planned | — | — |
+| 37.20 | Create Payroll Notification Outbox Foundation | Payroll Automation | Verified | 2026-07-24 | Brie Delos Reyes |
 | 37 | Payroll Notification Outbox Events | Automation | Superseded | — | — |
 | 37.18 | Payroll Workflow and Notification Architecture Inspection | Inspection | Completed | 2026-07-24 | Brie Delos Reyes |
 | 37.19 | Final Payroll Notification and RPC Inspection | Inspection | Completed | 2026-07-24 | Brie Delos Reyes |
@@ -512,7 +512,7 @@ Payroll notifications are not assignment-based and should not be forced into thi
 
 The implementation will continue under:
 
-`Query 36D.13 — Dedicated Payroll Notification Outbox Foundation`
+`37.20 – Create Payroll Notification Outbox Foundation`
 
 No production database change was made under Query 37.
 
@@ -598,7 +598,7 @@ Its notification-type constraint supports only:
 
 Do not modify or repurpose the existing assignment notification outbox for payroll.
 
-Create a dedicated payroll notification outbox under Query 36D.13.
+Create a dedicated payroll notification outbox under 37.20.
 
 ### Database impact
 
@@ -606,50 +606,67 @@ Read-only inspection. No schema or data changes.
 
 ---
 
-## Query 36D.13 — Dedicated Payroll Notification Outbox Foundation
+## 37.20 – Create Payroll Notification Outbox Foundation
 
-**Status:** Planned  
-**Category:** Payroll Automation
+**Status:** Verified  
+**Category:** Payroll Automation  
+**Applied Date:** 2026-07-24  
+**Applied By:** Brie Delos Reyes
 
 ### Purpose
 
-Create payroll-specific notification infrastructure without changing the existing assignment notification workflow.
+Create a dedicated payroll notification queue without modifying the existing assignment notification infrastructure.
 
-### Planned notification events
+### Database objects created
 
-| Trigger | Recipient |
-|---|---|
-| Payroll submitted for approval | Client Services Director |
-| Payroll approved | Submitting Payroll Team member |
-| Payroll rejected | Submitting Payroll Team member |
-| Payroll placed on hold | Submitting Payroll Team member |
-| Payroll revised and resubmitted | Client Services Director |
-| ACH payout initiated | Applicable payroll recipient or operational recipient, subject to final workflow design |
-| Payroll marked paid | Applicable payroll recipient or operational recipient, subject to final workflow design |
+- `payroll_notification_outbox`
+- `set_payroll_notification_outbox_updated_at()` trigger function
+- `payroll_notification_outbox_set_updated_at` trigger
 
-### Planned requirements
+### Notification types added
 
-- Dedicated `payroll_notification_outbox`
+- `payroll_submitted`
+- `payroll_resubmitted`
+- `payroll_approved`
+- `payroll_rejected`
+- `payroll_on_hold`
+
+### Delivery statuses
+
+- `pending`
+- `processing`
+- `sent`
+- `failed`
+
+### Security
+
+- Enabled Row Level Security.
+- Forced Row Level Security.
+- Revoked anonymous and ordinary authenticated-user access.
+- Granted the trusted `service_role` the required queue-processing access.
+- Did not grant delete access.
+
+### Queue capabilities
+
 - Payroll-run association
-- Notification type
+- Notification-type tracking
 - Sender and recipient tracking
-- Recipient email
-- Email subject
-- Structured payload
-- Delivery status
-- Attempt count
-- Last error
-- Created timestamp
-- Sent timestamp
-- Duplicate protection
-- Retry-safe processing
-- Service-role worker access
-- No expansion of anonymous or ordinary authenticated-user permissions
-- No impact to assignment notifications
+- Recipient email storage
+- Email subject storage
+- Structured JSON payloads
+- Delivery-status tracking
+- Attempt counting
+- Last-attempt timestamps
+- Sent timestamps
+- Error tracking
+- Deterministic duplicate protection
+- Retry-safe worker processing support
+- Automatic `updated_at` maintenance
+- Indexes supporting pending work, recovery, payroll-run history, and recipient history
 
 ### Email identification rule
 
-Payroll emails must use the payroll period end date rather than the payroll run number.
+Payroll emails must identify the payroll period using the payroll-period end date rather than exposing the payroll run number.
 
 Date format:
 
@@ -660,15 +677,39 @@ Examples:
 - `Payroll Approval Required — 31 July 2026`
 - `Payroll Approved — 31 July 2026`
 
-### Existing workflow support
+### Preserved behavior
 
-No new comment columns are required because the current RPCs already accept optional notes.
+The migration did not modify:
 
-No new payroll audit table is required because `write_car_concierge_payroll_event(...)` already stores workflow notes and metadata.
+- `contractor_notification_outbox`
+- Assignment notification triggers
+- Assignment notification processing
+- Payroll submission RPCs
+- Payroll review RPCs
+- Payroll audit events
+- Calendar synchronization
+- Existing payroll workflow behavior
 
-### Deployment status
+### Verification
 
-Do not mark this query `Applied` until it has run successfully in Supabase.
+The Supabase verification result confirmed:
+
+- `table_created: true`
+- `rls_enabled: true`
+- `rls_forced: true`
+- Delivery statuses: `pending`, `processing`, `sent`, and `failed`
+- Notification types: `payroll_submitted`, `payroll_resubmitted`, `payroll_approved`, `payroll_rejected`, and `payroll_on_hold`
+- `assignment_notification_outbox_modified: false`
+
+### Execution result
+
+```text
+{"query":"37.20","migration":"Dedicated Payroll Notification Outbox Foundation","rls_forced":true,"rls_enabled":true,"table_created":true,"delivery_statuses":["pending","processing","sent","failed"],"notification_types":["payroll_submitted","payroll_resubmitted","payroll_approved","payroll_rejected","payroll_on_hold"],"assignment_notification_outbox_modified":false}
+```
+
+### Final result
+
+The dedicated payroll notification outbox foundation is active and verified in production. The existing assignment notification infrastructure remains unchanged.
 
 ---
 
@@ -706,6 +747,7 @@ Use this checklist for every schema-changing query.
 | 2026-07 | 27 | Notification outbox permission test | Passed | Brie |
 | 2026-07 | 28 | Assignment retrieval and calendar-sync permission test | Passed | Brie |
 | 2026-07 | 29 | Calendar issue review | Query unnecessary; incorrect date identified | Brie |
+| 2026-07-24 | 37.20 | Payroll notification outbox foundation verification | Passed; table, RLS, statuses, notification types, and assignment-outbox isolation confirmed | Brie Delos Reyes |
 
 ---
 
@@ -720,9 +762,9 @@ Use this checklist for every schema-changing query.
 # Notes
 
 - The migration register is the authoritative sequence for future SQL query numbering.
-- The latest verified production migration is `36D.12`.
+- The latest verified production migration is `37.20`.
 - Inspection Queries `37.18` and `37.19` are completed and read-only.
-- The next available schema-changing migration number is `36D.13`.
+- The next planned migration is `38 – Create Payroll Notification Enqueue Function`.
 - Query 37 is superseded and must not be reused.
 - Inspection queries remain documented even when they do not modify the database.
 - Do not mark planned queries as applied until they have been successfully run in Supabase.
@@ -1848,8 +1890,8 @@ The following major portal capabilities are active:
 
 ## Current Migration Position
 
-- Latest verified production migration: `36D.12`
+- Latest verified production migration: `37.20`
 - Completed inspection queries: `37.18` and `37.19`
-- Next available schema-changing migration: `36D.13`
+- Next planned migration: `38 – Create Payroll Notification Enqueue Function`
 - Query 37 is superseded and must not be reused.
 - Existing migration and inspection query numbers must not be reused or renumbered.
