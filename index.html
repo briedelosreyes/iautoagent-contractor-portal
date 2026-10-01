@@ -1618,6 +1618,7 @@
     function renderPayrollRun(run){
       const items=payrollItemsForRun(run.id);
       const canReview=(isManager()||isCEO())&&["pending_client_services_approval","on_hold"].includes(run.status);
+      const cancelAction=run.status==="draft"?`<div class="card-actions"><button class="button button-danger" data-action="cancel-payroll" data-id="${run.id}">Cancel Draft Payroll</button></div>`:"";
       const reviewActions=canReview?`
         <div class="card-actions">
           <button class="button button-green" data-action="review-payroll" data-id="${run.id}" data-decision="approved_for_payout">
