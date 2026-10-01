@@ -1680,7 +1680,7 @@
       return data;
     }
 
-    async async function cancelPayroll(runId,button){
+    async function cancelPayroll(runId,button){
       const confirmed=confirm("Cancel this draft payroll? It will be marked cancelled and retained for audit.");
       if(!confirmed)return;
       const normal=button.textContent;
