@@ -1698,7 +1698,7 @@
       }
     }
 
-    function generatePayroll(button){
+    async function generatePayroll(button){
       const refreshing=button.dataset.payrollMode==="refresh";
       const confirmed=confirm(refreshing?"Refresh the existing draft payroll? Current draft line items and totals will be rebuilt from the latest eligible payroll data.":"Generate the draft payroll run for the current payroll period? This snapshots eligible payroll data into the run.");
       if(!confirmed)return;
