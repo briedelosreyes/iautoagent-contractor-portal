@@ -2020,3 +2020,27 @@ The following major portal capabilities are active:
 - Next planned migration: `39 – Integrate Payroll Notification Enqueue into Payroll Workflow RPCs`
 - Query 37 is superseded and must not be reused.
 - Existing migration and inspection query numbers must not be reused or renumbered.
+
+
+---
+
+## 2026-10-19 — Fix Listing Agent Draft INSERT RETURNING visibility
+
+**Status:** Applied and verified in production
+
+Pedro Ramirez could not create a Showing because the portal uses INSERT RETURNING (`.insert(...).select("id,assignment_number")`). The INSERT policy accepted his active Listing Agent role and ownership, but the SELECT policy only called `portal_can_view_assignment(id)`. Its STABLE helper looks up the assignment in the same table and cannot see the new row in the inserting statement snapshot, causing SQLSTATE 42501.
+
+Updated only the existing SELECT policy to check the row listing-agent ownership directly alongside the existing visibility helper:
+
+```sql
+ALTER POLICY "Users view permitted assignments"
+ON public.car_concierge_assignments
+USING (
+  public.portal_can_view_assignment(id)
+  OR public.portal_is_listing_agent_owner(listing_agent_id)
+);
+```
+
+The ownership helper already requires an active linked Listing Agent record and the active portal role. This preserves the existing intended visibility scope; INSERT/UPDATE policies, role assignments, and RLS remain unchanged.
+
+Verification used the authenticated role and Pedro’s JWT subject, with Todd Altrogge as concierge. The original INSERT RETURNING reproduced the exact row-level-security error. With the correction, creating and returning the draft and editing it passed. Creating a draft for an unowned agent remained denied with insufficient_privilege. Tests rolled back all test rows. Repeated the regression after committing the policy and confirmed the production policy definition. No real assignment was submitted and no notification was sent.
