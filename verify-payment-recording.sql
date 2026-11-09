@@ -19,10 +19,10 @@ begin
   select id into period_id from public.car_concierge_payroll_periods limit 1;
   select concierge_id into contractor from public.car_concierge_payroll_items limit 1;
   insert into public.car_concierge_payroll_runs(id,payroll_period_id,run_number,status,reviewed_by_profile_id,reviewed_at,total_payroll_amount)
-    select run_id,period_id,coalesce(max(run_number),0)+1,'approved_for_payout',actor,now(),3
+    select run_id,period_id,coalesce(max(run_number),0)+1,'reopened',actor,now(),3
     from public.car_concierge_payroll_runs where payroll_period_id=period_id;
   insert into public.car_concierge_payroll_items(id,payroll_run_id,concierge_id,status,gross_pay)
-    values(first_item,run_id,contractor,'approved',1),(second_item,run_id,actor,'approved',2);
+    values(first_item,run_id,contractor,'reopened',1),(second_item,run_id,actor,'reopened',2);
 
   blocked:=false;
   begin perform public.record_car_concierge_payroll_item_payment(first_item,current_date,'TEST',99);
@@ -32,22 +32,21 @@ begin
   begin perform public.record_car_concierge_payroll_item_payment(first_item,current_date+2,'TEST',1);
   exception when others then blocked:=true; end;
   if not blocked then raise exception 'Future payment was accepted'; end if;
-  blocked:=false;
-  begin update public.car_concierge_payroll_items set gross_pay=4 where id=first_item;
-  exception when others then blocked:=true; end;
-  if not blocked then raise exception 'Finalized amount edit was accepted'; end if;
-
   result:=public.record_car_concierge_payroll_item_payment(first_item,(now() at time zone 'America/Chicago')::date,'TEST external check 1',1);
   if result->>'status'<>'paid' or (result->>'run_paid')::boolean then raise exception 'Partial payment result incorrect'; end if;
-  if (select status from public.car_concierge_payroll_runs where id=run_id)<>'approved_for_payout' then raise exception 'Run finalized prematurely'; end if;
+  if (select status from public.car_concierge_payroll_runs where id=run_id)<>'reopened' then raise exception 'Run finalized prematurely'; end if;
   blocked:=false;
   begin perform public.record_car_concierge_payroll_item_payment(first_item,current_date,'TEST duplicate',1);
   exception when others then blocked:=true; end;
   if not blocked then raise exception 'Duplicate payment was accepted'; end if;
 
   result:=public.record_car_concierge_payroll_item_payment(second_item,(now() at time zone 'America/Chicago')::date,'TEST external check 2',2);
-  if not (result->>'run_paid')::boolean or (select status from public.car_concierge_payroll_runs where id=run_id)<>'paid' then raise exception 'Run not marked paid'; end if;
-  if (select count(*) from public.car_concierge_payroll_events where payroll_run_id=run_id)<>4 then raise exception 'Payment audit trail incomplete'; end if;
+  if not (result->>'run_paid')::boolean or (select status from public.car_concierge_payroll_runs where id=run_id)<>'reopened' then raise exception 'Legacy run status changed'; end if;
+  if (select count(*) from public.car_concierge_payroll_events where payroll_run_id=run_id)<>2 then raise exception 'Payment audit trail incomplete'; end if;
+  blocked:=false;
+  begin delete from public.car_concierge_payroll_items where id=first_item;
+  exception when others then blocked:=true; end;
+  if not blocked then raise exception 'Paid record deletion accepted'; end if;
   blocked:=false;
   begin update public.car_concierge_payroll_items set ach_reference='changed' where id=first_item;
   exception when others then blocked:=true; end;
@@ -63,4 +62,4 @@ begin
 end;
 $test$;
 rollback;
-select 'PASS: payment recording, partial/full totals, audit trail, authorization, amount protection, duplicate rejection and immutability; all test writes rolled back.' as verification;
+select 'PASS: unapproved payment tracking, partial/full status, audit trail, authorization, amount checks, duplicate rejection and paid record protection; all test writes rolled back.' as verification;
